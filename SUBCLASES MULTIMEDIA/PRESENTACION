@@ -1,0 +1,26 @@
+public class Presentacion extends Multimedia implements Visualizable {
+    private int cantidadDiapositivas;
+
+    public Presentacion(String titulo, Autor autor, int año, int cantidadDiapositivas) {
+        super(titulo, autor, año);
+        this.cantidadDiapositivas = cantidadDiapositivas;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Presentación: " + titulo + ", diapositivas: " + cantidadDiapositivas);
+    }
+
+    @Override
+    public void ver() {
+        System.out.println("Visualizando presentación: " + titulo);
+    }
+
+    public int getCantidadDiapositivas() {
+        return cantidadDiapositivas;
+    }
+
+    public void setCantidadDiapositivas(int cantidadDiapositivas) {
+        this.cantidadDiapositivas = cantidadDiapositivas;
+    }
+}

@@ -1,0 +1,26 @@
+public class Mapa extends Multimedia implements Visualizable {
+    private String region;
+
+    public Mapa(String titulo, Autor autor, int año, String region) {
+        super(titulo, autor, año);
+        this.region = region;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Mapa: " + titulo + ", región: " + region);
+    }
+
+    @Override
+    public void ver() {
+        System.out.println("Visualizando mapa: " + titulo);
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+}

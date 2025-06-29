@@ -1,0 +1,26 @@
+public class CursoOnline extends Multimedia implements Visualizable {
+    private String plataforma;
+
+    public CursoOnline(String titulo, Autor autor, int año, String plataforma) {
+        super(titulo, autor, año);
+        this.plataforma = plataforma;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Curso Online: " + titulo + ", plataforma: " + plataforma);
+    }
+
+    @Override
+    public void ver() {
+        System.out.println("Visualizando curso online: " + titulo);
+    }
+
+    public String getPlataforma() {
+        return plataforma;
+    }
+
+    public void setPlataforma(String plataforma) {
+        this.plataforma = plataforma;
+    }
+}

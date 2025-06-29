@@ -1,0 +1,26 @@
+public class Audio extends Multimedia implements Reproducible {
+    private double duracion;
+
+    public Audio(String titulo, Autor autor, int año, double duracion) {
+        super(titulo, autor, año);
+        this.duracion = duracion;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Audio: " + titulo + ", duración: " + duracion + " min");
+    }
+
+    @Override
+    public void reproducir() {
+        System.out.println("Reproduciendo audio: " + titulo);
+    }
+
+    public double getDuracion() {
+        return duracion;
+    }
+
+    public void setDuracion(double duracion) {
+        this.duracion = duracion;
+    }
+}
