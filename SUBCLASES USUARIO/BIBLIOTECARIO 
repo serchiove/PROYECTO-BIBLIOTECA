@@ -1,0 +1,19 @@
+package usuarios;
+
+public class Bibliotecario extends Usuario {
+    private String codigoEmpleado;
+
+    public Bibliotecario(int id, String nombre, String correo, String telefono, String direccion, String codigoEmpleado) {
+        super(id, nombre, correo, telefono, direccion);
+        this.codigoEmpleado = codigoEmpleado;
+    }
+
+    public void registrarLibro() {
+        System.out.println("Libro registrado por: " + getNombre());
+    }
+
+    @Override
+    public void login() {
+        System.out.println("Bibliotecario " + getNombre() + " ha iniciado sesión.");
+    }
+}

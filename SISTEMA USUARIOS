@@ -1,0 +1,25 @@
+package usuarios;
+
+import java.util.*;
+
+public class SistemaUsuarios {
+    private Map<Integer, Usuario> usuariosPorId = new HashMap<>();
+    private Set<Usuario> usuariosRegistrados = new HashSet<>();
+
+    public void agregarUsuario(Usuario usuario) {
+        if (usuariosRegistrados.add(usuario)) {
+            usuariosPorId.put(usuario.getIdUsuario(), usuario);
+            System.out.println("Usuario agregado: " + usuario.getNombre());
+        } else {
+            System.out.println("Usuario duplicado: " + usuario.getNombre());
+        }
+    }
+
+    public Usuario buscarPorId(int id) {
+        return usuariosPorId.get(id);
+    }
+
+    public void mostrarTodos() {
+        usuariosRegistrados.forEach(u -> System.out.println("-> " + u.getNombre()));
+    }
+}
