@@ -1,0 +1,11 @@
+package servicios;
+
+import usuarios.Usuario;
+
+public class AutenticacionService {
+    public boolean autenticar(Usuario usuario, String nombre) {
+        boolean exito = usuario.getNombre().equalsIgnoreCase(nombre);
+        System.out.println(exito ? "Autenticación exitosa." : "Error en autenticación.");
+        return exito;
+    }
+}

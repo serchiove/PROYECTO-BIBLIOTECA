@@ -1,0 +1,29 @@
+package servicios;
+
+import multimedia.Multimedia;
+
+public class MultimediaService {
+    private Repositorio<Multimedia> catalogo = new Repositorio<>();
+
+    public void registrarMultimedia(Multimedia m) {
+        catalogo.agregar(m.getId(), m);
+        System.out.println("Multimedia registrada: " + m.getTitulo());
+    }
+
+    public Multimedia buscarMultimedia(int id) {
+        return catalogo.buscar(id);
+    }
+
+    public void reproducirPorId(int id) {
+        Multimedia m = catalogo.buscar(id);
+        if (m != null) {
+            m.reproducir();
+        } else {
+            System.out.println("No se encontró multimedia con ID: " + id);
+        }
+    }
+
+    public void mostrarCatalogo() {
+        catalogo.mostrarTodos(m -> System.out.println(" - " + m.getTitulo()));
+    }
+}

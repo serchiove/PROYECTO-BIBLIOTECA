@@ -1,0 +1,20 @@
+package servicios;
+
+import usuarios.Usuario;
+
+public class UsuarioService {
+    private Repositorio<Usuario> usuarios = new Repositorio<>();
+
+    public void agregarUsuario(Usuario usuario) {
+        usuarios.agregar(usuario.getIdUsuario(), usuario);
+        System.out.println("Usuario agregado: " + usuario.getNombre());
+    }
+
+    public Usuario buscarUsuario(int id) {
+        return usuarios.buscar(id);
+    }
+
+    public void mostrarUsuarios() {
+        usuarios.mostrarTodos(Usuario::verPerfil);
+    }
+}
