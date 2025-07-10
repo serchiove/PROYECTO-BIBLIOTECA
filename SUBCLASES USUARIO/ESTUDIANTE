@@ -1,0 +1,23 @@
+package usuarios;
+
+public class Estudiante extends Usuario {
+    private String carrera;
+
+    public Estudiante(int id, String nombre, String correo, String telefono, String direccion, String carrera) {
+        super(id, nombre, correo, telefono, direccion);
+        this.carrera = carrera;
+    }
+
+    public void registrarUsuario() {
+        System.out.println("Estudiante registrado: " + getNombre());
+    }
+
+    public void modificarUsuario() {
+        System.out.println("Datos modificados para: " + getNombre());
+    }
+
+    @Override
+    public void login() {
+        System.out.println("Estudiante " + getNombre() + " ha iniciado sesión.");
+    }
+}

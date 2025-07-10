@@ -1,0 +1,5 @@
+package usuarios;
+
+public interface Registrable {
+    void login();
+}

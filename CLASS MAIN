@@ -1,0 +1,17 @@
+package usuarios;
+
+public class Main {
+    public static void main(String[] args) {
+        SistemaUsuarios sistema = new SistemaUsuarios();
+
+        Usuario estudiante1 = new Estudiante(1, "Raul", "raul14@gmail.com", "987654321", "Calle Lima", "Ingeniería");
+        Usuario bibliotecario1 = new Bibliotecario(2, "Marcos", "marCOS3@gmail.com", "997755331", "Calle Arequipa", "Negocios");
+
+        sistema.agregarUsuario(estudiante1);
+        sistema.agregarUsuario(bibliotecario1);
+        sistema.mostrarTodos();
+
+        estudiante1.login();
+        bibliotecario1.login();
+    }
+}
