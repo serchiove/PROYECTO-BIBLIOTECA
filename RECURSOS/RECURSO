@@ -1,0 +1,34 @@
+package RECURSOS;
+
+public class Recurso {
+    private int id;
+    private String tipo;
+    private boolean reservado;
+
+    public Recurso(int id, String tipo) {
+        this.id = id;
+        this.tipo = tipo;
+        this.reservado = false;
+    }
+
+    public int getId() { return id; }
+    public String getTipo() { return tipo; }
+    public boolean estaReservado() { return reservado; }
+
+    public boolean reservar() {
+        if (!reservado) {
+            reservado = true;
+            return true;
+        }
+        return false;
+    }
+
+    public void liberar() {
+        reservado = false;
+    }
+
+    @Override
+    public String toString() {
+        return "Recurso{" + "id=" + id + ", tipo='" + tipo + '\'' + ", reservado=" + reservado + '}';
+    }
+}

@@ -1,0 +1,35 @@
+package RECURSOS;
+
+import java.util.ArrayList;
+
+public class RecursoService {
+    private ArrayList<Recurso> recursos;
+
+    public RecursoService() {
+        recursos = new ArrayList<>();
+        recursos.add(new Recurso(1, "Mesa"));
+        recursos.add(new Recurso(2, "Computadora"));
+        recursos.add(new Recurso(3, "Espacio de estudio"));
+    }
+
+    public void mostrarRecursos() {
+        for (Recurso r : recursos) System.out.println(r);
+    }
+
+    public boolean reservarRecurso(int id) {
+        for (Recurso r : recursos) {
+            if (r.getId() == id) return r.reservar();
+        }
+        return false;
+    }
+
+    public boolean liberarRecurso(int id) {
+        for (Recurso r : recursos) {
+            if (r.getId() == id) {
+                r.liberar();
+                return true;
+            }
+        }
+        return false;
+    }
+}
