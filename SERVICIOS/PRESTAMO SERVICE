@@ -1,0 +1,21 @@
+package servicios;
+
+import multimedia.Multimedia;
+import usuarios.Usuario;
+
+import java.util.*;
+
+public class PrestamoService {
+    private List<String> historialPrestamos = new ArrayList<>();
+
+    public void prestar(Usuario usuario, Multimedia multimedia) {
+        String registro = "Usuario " + usuario.getNombre() + " ha prestado: " + multimedia.getTitulo();
+        historialPrestamos.add(registro);
+        System.out.println(registro);
+    }
+
+    public void mostrarHistorial() {
+        System.out.println("Historial de préstamos:");
+        historialPrestamos.forEach(System.out::println);
+    }
+}

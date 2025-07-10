@@ -1,0 +1,14 @@
+package servicios;
+
+import usuarios.Usuario;
+import multimedia.Multimedia;
+
+public class ReporteService {
+    public void generarReporteUsuario(Usuario usuario) {
+        System.out.println("Reporte para el usuario: " + usuario.getNombre());
+    }
+
+    public void generarReporteMultimedia(Multimedia multimedia) {
+        System.out.println("Reporte del material multimedia: " + multimedia.getTitulo());
+    }
+}

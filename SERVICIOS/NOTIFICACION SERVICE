@@ -1,0 +1,7 @@
+package servicios;
+
+public class NotificacionService {
+    public void enviarNotificacion(String mensaje) {
+        System.out.println("Notificación: " + mensaje);
+    }
+}

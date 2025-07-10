@@ -1,0 +1,24 @@
+package servicios;
+
+import java.util.*;
+import java.util.function.Consumer;
+
+public class Repositorio<T> {
+    private Map<Integer, T> elementos = new HashMap<>();
+
+    public void agregar(int id, T elemento) {
+        elementos.put(id, elemento);
+    }
+
+    public T buscar(int id) {
+        return elementos.get(id);
+    }
+
+    public void mostrarTodos(Consumer<T> accion) {
+        elementos.values().forEach(accion);
+    }
+
+    public Collection<T> obtenerTodos() {
+        return elementos.values();
+    }
+}
