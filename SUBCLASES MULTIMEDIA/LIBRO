@@ -1,0 +1,26 @@
+public class Libro extends Multimedia implements Descargable {
+    private int paginas;
+
+    public Libro(String titulo, Autor autor, int año, int paginas) {
+        super(titulo, autor, año);
+        this.paginas = paginas;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Libro: " + titulo + ", páginas: " + paginas);
+    }
+
+    @Override
+    public void descargar() {
+        System.out.println("Descargando libro: " + titulo);
+    }
+
+    public int getPaginas() {
+        return paginas;
+    }
+
+    public void setPaginas(int paginas) {
+        this.paginas = paginas;
+    }
+}

@@ -1,0 +1,26 @@
+public class Revista extends Multimedia implements Descargable {
+    private int numeroEdicion;
+
+    public Revista(String titulo, Autor autor, int año, int numeroEdicion) {
+        super(titulo, autor, año);
+        this.numeroEdicion = numeroEdicion;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Revista: " + titulo + ", edición: " + numeroEdicion);
+    }
+
+    @Override
+    public void descargar() {
+        System.out.println("Descargando revista: " + titulo);
+    }
+
+    public int getNumeroEdicion() {
+        return numeroEdicion;
+    }
+
+    public void setNumeroEdicion(int numeroEdicion) {
+        this.numeroEdicion = numeroEdicion;
+    }
+}

@@ -1,0 +1,26 @@
+public class Tesis extends Multimedia implements Descargable {
+    private String universidad;
+
+    public Tesis(String titulo, Autor autor, int año, String universidad) {
+        super(titulo, autor, año);
+        this.universidad = universidad;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Tesis: " + titulo + ", universidad: " + universidad);
+    }
+
+    @Override
+    public void descargar() {
+        System.out.println("Descargando tesis: " + titulo);
+    }
+
+    public String getUniversidad() {
+        return universidad;
+    }
+
+    public void setUniversidad(String universidad) {
+        this.universidad = universidad;
+    }
+}

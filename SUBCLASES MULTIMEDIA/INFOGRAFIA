@@ -1,0 +1,26 @@
+public class Infografia extends Multimedia implements Visualizable {
+    private String tema;
+
+    public Infografia(String titulo, Autor autor, int año, String tema) {
+        super(titulo, autor, año);
+        this.tema = tema;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Infografía: " + titulo + ", tema: " + tema);
+    }
+
+    @Override
+    public void ver() {
+        System.out.println("Visualizando infografía: " + titulo);
+    }
+
+    public String getTema() {
+        return tema;
+    }
+
+    public void setTema(String tema) {
+        this.tema = tema;
+    }
+}

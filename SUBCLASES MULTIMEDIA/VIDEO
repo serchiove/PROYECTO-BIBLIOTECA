@@ -1,0 +1,32 @@
+public class Video extends Multimedia implements Reproducible, Visualizable {
+    private String resolucion;
+
+    public Video(String titulo, Autor autor, int año, String resolucion) {
+        super(titulo, autor, año);
+        this.resolucion = resolucion;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Video: " + titulo + ", resolución: " + resolucion);
+    }
+
+    @Override
+    public void reproducir() {
+        System.out.println("Reproduciendo video: " + titulo);
+    }
+
+    @Override
+    public void ver() {
+        System.out.println("Visualizando video: " + titulo);
+    }
+
+    public String getResolucion() {
+        return resolucion;
+    }
+
+    public void setResolucion(String resolucion) {
+        this.resolucion = resolucion;
+    }
+}
+
