@@ -1,0 +1,65 @@
+[
+  {
+    "duracionSegundos": 300,
+    "id": "VID001",
+    "titulo": "Tutorial de Git",
+    "autor": "Juan Gómez",
+    "disponible": false
+  },
+  {
+    "duracionMinutos": 15,
+    "id": "AUD001",
+    "titulo": "Podcast Tecnología",
+    "autor": "Laura Méndez",
+    "disponible": false
+  },
+  {
+    "region": "Europa",
+    "id": "MAP001",
+    "titulo": "Mapa político de Europa",
+    "autor": "Cartografía Global",
+    "disponible": true
+  },
+  {
+    "tema": "Historia de Internet",
+    "id": "INFO001",
+    "titulo": "Evolución de Internet",
+    "autor": "Mario López",
+    "disponible": false
+  },
+  {
+    "numeroDiapositivas": 20,
+    "id": "PRES001",
+    "titulo": "Proyecto Final",
+    "autor": "Sofía Castro",
+    "disponible": true
+  },
+  {
+    "numero": 124,
+    "id": "REV001",
+    "titulo": "Ciencia Hoy",
+    "autor": "Editorial Científica",
+    "disponible": true
+  },
+  {
+    "universidad": "Universidad Nacional",
+    "id": "TES001",
+    "titulo": "Inteligencia Artificial en la Educación",
+    "autor": "Carlos Sánchez",
+    "disponible": true
+  },
+  {
+    "duracionSegundos": 5,
+    "id": "VID002",
+    "titulo": "ASDSAD",
+    "autor": "DASD",
+    "disponible": true
+  },
+  {
+    "universidad": "UNIVERSIDAD TECNOLOGICA DEL PERU(UTP)",
+    "id": "123",
+    "titulo": "TESIS UTP",
+    "autor": "SERGIO",
+    "disponible": true
+  }
+]
