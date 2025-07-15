@@ -10,6 +10,15 @@ public class Tesis extends Multimedia implements Descargable {
         super(id, titulo, autor, disponible);
         this.universidad = universidad;
     }
+
+    public String getUniversidad() {
+        return universidad;
+    }
+
+    public void setUniversidad(String universidad) {
+        this.universidad = universidad;
+    }
+
     @Override
     public void descargar() {
         System.out.println("Descargando tesis de: " + universidad);
@@ -20,6 +29,7 @@ public class Tesis extends Multimedia implements Descargable {
         System.out.printf("Tesis - ID: %s, Título: %s, Autor: %s, Universidad: %s%n",
                 id, titulo, autor, universidad);
     }
+
     @Override
     public String toString() {
         return String.format("Tesis - ID: %s, Título: %s, Autor: %s, Universidad: %s",
@@ -28,6 +38,6 @@ public class Tesis extends Multimedia implements Descargable {
 
     @Override
     public void ver() {
-
+        // Implementar si aplica, o dejar vacío
     }
 }

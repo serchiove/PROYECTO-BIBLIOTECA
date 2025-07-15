@@ -3,70 +3,55 @@ package com.biblioteca.servicios;
 import com.biblioteca.data.MultimediaDAO;
 import com.biblioteca.multimedia.Multimedia;
 
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MultimediaService {
 
-    protected List<Multimedia> recursos;
+    private final MultimediaDAO multimediaDAO;
 
-    public MultimediaService() {
-        this.recursos = MultimediaDAO.cargarRecursos(); // Carga inicial
-    }
-
-    public void agregarRecurso(Multimedia recurso) {
-        recursos.add(recurso);
-        guardarRecursos();
+    public MultimediaService(Connection conexion) {
+        this.multimediaDAO = new MultimediaDAO(conexion);
     }
 
     public List<Multimedia> listarRecursos() {
-        return new ArrayList<>(recursos); // copia segura
+        return multimediaDAO.obtenerTodosLosRecursos();
+    }
+
+    public Multimedia buscarPorId(String id) {
+        return multimediaDAO.obtenerPorId(id);
     }
 
     public List<Multimedia> listarRecursosDisponibles() {
-        return recursos.stream()
-                .filter(Multimedia::isDisponible)
-                .collect(Collectors.toList());
+        return multimediaDAO.obtenerRecursosDisponibles();
     }
 
-    public List<Multimedia> getRecursos() {
-        return recursos;
+    // NO expongas directamente el DAO, mejor encapsula aquí los métodos necesarios
+
+    public void agregarRecurso(Multimedia recurso) throws SQLException {
+        multimediaDAO.insertarRecurso(recurso);
     }
 
-    public Multimedia obtenerPorId(String id) {
-        for (Multimedia r : recursos) {
-            if (r.getId().equals(id)) {
-                return r;
-            }
+    public void actualizarRecurso(Multimedia recurso) {
+        multimediaDAO.actualizar(recurso);
+    }
+
+    public void marcarComoDisponible(String id) {
+        multimediaDAO.actualizarDisponibilidad(id, true);
+    }
+
+    // Método para eliminar recurso que retorna boolean para saber si eliminó o no
+    public boolean eliminarRecursoPorId(String id) {
+        Multimedia existente = multimediaDAO.obtenerPorId(id);
+        if (existente == null) {
+            return false; // No existe recurso con ese ID
         }
+        multimediaDAO.eliminarRecurso(id);
+        return true;
+    }
+
+    public MultimediaDAO getMultimediaDAO() {
         return null;
-    }
-
-    public List<Multimedia> listarTodos() {
-        return MultimediaDAO.cargarRecursos(); // recarga completa desde JSON
-    }
-
-    public void actualizarRecurso(Multimedia recursoActualizado) {
-        for (int i = 0; i < recursos.size(); i++) {
-            if (recursos.get(i).getId().equals(recursoActualizado.getId())) {
-                recursos.set(i, recursoActualizado);
-                guardarRecursos();
-                break;
-            }
-        }
-    }
-
-    public void marcarComoDisponible(String idRecurso) {
-        Multimedia recurso = obtenerPorId(idRecurso);
-        if (recurso != null) {
-            recurso.setDisponible(true);
-            actualizarRecurso(recurso);
-        }
-    }
-
-
-    protected void guardarRecursos() {
-        MultimediaDAO.guardarRecursos(recursos);
     }
 }

@@ -6,27 +6,39 @@ import com.biblioteca.multimedia.Multimedia;
 import com.biblioteca.servicios.MultimediaService;
 import com.biblioteca.servicios.PrestamoService;
 import com.biblioteca.servicios.UsuarioService;
-import com.biblioteca.usuarios.Estudiante;
 import com.biblioteca.usuarios.Usuario;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.Connection;
 import java.util.List;
 
 public class GestionPrestamosFrame extends JFrame {
+
     private final PrestamoService prestamoService;
     private final UsuarioService usuarioService;
     private final MultimediaService multimediaService;
+    private final Usuario usuarioActual; // Usuario que abre la ventana
 
     private JComboBox<Usuario> comboUsuarios;
     private JComboBox<Multimedia> comboRecursosDisponibles;
     private JComboBox<Multimedia> comboRecursosPrestados;
 
-    public GestionPrestamosFrame() {
-        this.usuarioService = new UsuarioService();
-        this.multimediaService = new MultimediaService();
-        PrestamoDAO prestamoDAO = new PrestamoDAO();
+    public GestionPrestamosFrame(Connection connection, Usuario usuarioActual) {
+        this.usuarioService = new UsuarioService(connection);
+        this.multimediaService = new MultimediaService(connection);
+        PrestamoDAO prestamoDAO = new PrestamoDAO(connection);
         this.prestamoService = new PrestamoService(prestamoDAO, multimediaService, usuarioService);
+        this.usuarioActual = usuarioActual;
+        initUI(true, null);
+    }
+
+    public GestionPrestamosFrame(PrestamoService prestamoService, UsuarioService usuarioService,
+                                 MultimediaService multimediaService, Usuario usuarioActual) {
+        this.prestamoService = prestamoService;
+        this.usuarioService = usuarioService;
+        this.multimediaService = multimediaService;
+        this.usuarioActual = usuarioActual;
         initUI(true, null);
     }
 
@@ -34,12 +46,15 @@ public class GestionPrestamosFrame extends JFrame {
         this.usuarioService = null;
         this.multimediaService = prestamoService.getMultimediaService();
         this.prestamoService = prestamoService;
+        this.usuarioActual = estudiante;
         initUI(false, estudiante);
     }
 
     private void initUI(boolean mostrarUsuarios, Usuario estudiante) {
-        Color rojoUTP = new Color(183, 28, 28);
         Color grisClaro = new Color(245, 245, 245);
+        Color grisOscuro = new Color(60, 63, 65);
+        Color textoOscuro = new Color(33, 33, 33);
+
         getContentPane().setBackground(grisClaro);
 
         setTitle("Gestión de Préstamos");
@@ -50,7 +65,7 @@ public class GestionPrestamosFrame extends JFrame {
 
         JLabel encabezado = new JLabel("📦 Gestión de Préstamos", SwingConstants.CENTER);
         encabezado.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        encabezado.setForeground(rojoUTP);
+        encabezado.setForeground(textoOscuro);
         encabezado.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         add(encabezado, BorderLayout.NORTH);
 
@@ -64,35 +79,42 @@ public class GestionPrestamosFrame extends JFrame {
 
         if (mostrarUsuarios) {
             cargarUsuarios();
+            comboUsuarios.setEnabled(true);  // habilitado para admin/profesor
             comboUsuarios.addActionListener(e -> {
                 Usuario seleccionado = (Usuario) comboUsuarios.getSelectedItem();
-                if (seleccionado != null) {
-                    cargarRecursosPrestados(seleccionado);
-                }
+                cargarRecursosPrestados(seleccionado);
             });
         } else {
             comboUsuarios.addItem(estudiante);
-            comboUsuarios.setEnabled(false);
+            comboUsuarios.setEnabled(true); // estudiante no puede cambiar usuario
             cargarRecursosPrestados(estudiante);
         }
 
         cargarRecursosDisponibles();
 
-        panelFormulario.add(new JLabel("Estudiante:"));
+        JLabel lblUsuario = new JLabel("Usuario:");
+        lblUsuario.setForeground(textoOscuro);
+        panelFormulario.add(lblUsuario);
         panelFormulario.add(comboUsuarios);
-        panelFormulario.add(new JLabel("Recurso disponible:"));
+
+        JLabel lblDisponible = new JLabel("Recurso disponible:");
+        lblDisponible.setForeground(textoOscuro);
+        panelFormulario.add(lblDisponible);
         panelFormulario.add(comboRecursosDisponibles);
-        panelFormulario.add(new JLabel("Recurso prestado:"));
+
+        JLabel lblPrestado = new JLabel("Recurso prestado:");
+        lblPrestado.setForeground(textoOscuro);
+        panelFormulario.add(lblPrestado);
         panelFormulario.add(comboRecursosPrestados);
 
         JButton btnPrestar = new JButton("Registrar préstamo");
-        btnPrestar.setBackground(rojoUTP);
+        btnPrestar.setBackground(grisOscuro);
         btnPrestar.setForeground(Color.WHITE);
         btnPrestar.setFocusPainted(false);
         btnPrestar.addActionListener(e -> registrarPrestamo());
 
         JButton btnDevolver = new JButton("Registrar devolución");
-        btnDevolver.setBackground(rojoUTP);
+        btnDevolver.setBackground(grisOscuro);
         btnDevolver.setForeground(Color.WHITE);
         btnDevolver.setFocusPainted(false);
         btnDevolver.addActionListener(e -> registrarDevolucion());
@@ -106,17 +128,41 @@ public class GestionPrestamosFrame extends JFrame {
 
     private void cargarUsuarios() {
         comboUsuarios.removeAllItems();
-        List<Usuario> usuarios = usuarioService.listarUsuarios();
-        for (Usuario u : usuarios) {
-            if (u instanceof Estudiante) {
+
+        if (usuarioService == null) {
+            System.out.println("⚠️ usuarioService es null, no se puede cargar usuarios.");
+            return;
+        }
+
+        try {
+            List<Usuario> usuarios = usuarioService.listarUsuarios();
+            System.out.println("Usuarios obtenidos: " + usuarios.size());
+
+            if (usuarios.isEmpty()) {
+                System.out.println("⚠️ No hay usuarios en la base de datos.");
+                return;
+            }
+
+            for (Usuario u : usuarios) {
+                System.out.println("Agregando usuario: " + u.getNombre() + " - Rol: " + u.getRol());
                 comboUsuarios.addItem(u);
             }
-        }
-        if (comboUsuarios.getItemCount() > 0) {
-            comboUsuarios.setSelectedIndex(0);
-            cargarRecursosPrestados((Usuario) comboUsuarios.getSelectedItem());
+
+            if (comboUsuarios.getItemCount() > 0) {
+                comboUsuarios.setSelectedIndex(0);
+                Usuario primero = (Usuario) comboUsuarios.getSelectedItem();
+                System.out.println("Usuario seleccionado inicialmente: " + primero.getNombre());
+                cargarRecursosPrestados(primero);
+            } else {
+                System.out.println("⚠️ ComboUsuarios está vacío después de cargar.");
+            }
+
+        } catch (Exception e) {
+            System.err.println("❌ Error cargando usuarios: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
 
     private void cargarRecursosDisponibles() {
         comboRecursosDisponibles.removeAllItems();
@@ -130,10 +176,12 @@ public class GestionPrestamosFrame extends JFrame {
 
     private void cargarRecursosPrestados(Usuario usuario) {
         comboRecursosPrestados.removeAllItems();
+        if (usuario == null) return;
+
         List<Prestamo> prestamos = prestamoService.prestamosPorUsuario(usuario.getId());
         for (Prestamo p : prestamos) {
             if (!p.isDevuelto()) {
-                Multimedia recurso = multimediaService.obtenerPorId(p.getIdRecurso());
+                Multimedia recurso = multimediaService.buscarPorId(p.getIdRecurso());
                 if (recurso != null) {
                     comboRecursosPrestados.addItem(recurso);
                 }
@@ -146,7 +194,7 @@ public class GestionPrestamosFrame extends JFrame {
         Multimedia recurso = (Multimedia) comboRecursosDisponibles.getSelectedItem();
 
         if (usuario == null) {
-            JOptionPane.showMessageDialog(this, "Seleccione un estudiante.");
+            JOptionPane.showMessageDialog(this, "Seleccione un usuario.");
             return;
         }
         if (recurso == null) {
@@ -156,11 +204,11 @@ public class GestionPrestamosFrame extends JFrame {
 
         boolean ok = prestamoService.registrarPrestamo(usuario.getId(), recurso.getId());
         if (ok) {
-            JOptionPane.showMessageDialog(this, "Préstamo registrado exitosamente.");
+            JOptionPane.showMessageDialog(this, "✅ Préstamo registrado exitosamente.");
             cargarRecursosDisponibles();
             cargarRecursosPrestados(usuario);
         } else {
-            JOptionPane.showMessageDialog(this, "No se pudo registrar el préstamo.");
+            JOptionPane.showMessageDialog(this, "❌ No se pudo registrar el préstamo.");
         }
     }
 
@@ -169,7 +217,7 @@ public class GestionPrestamosFrame extends JFrame {
         Multimedia recurso = (Multimedia) comboRecursosPrestados.getSelectedItem();
 
         if (usuario == null) {
-            JOptionPane.showMessageDialog(this, "Seleccione un estudiante.");
+            JOptionPane.showMessageDialog(this, "Seleccione un usuario.");
             return;
         }
         if (recurso == null) {
@@ -179,11 +227,11 @@ public class GestionPrestamosFrame extends JFrame {
 
         boolean ok = prestamoService.registrarDevolucion(usuario.getId(), recurso.getId());
         if (ok) {
-            JOptionPane.showMessageDialog(this, "Devolución registrada exitosamente.");
+            JOptionPane.showMessageDialog(this, "✅ Devolución registrada exitosamente.");
             cargarRecursosDisponibles();
             cargarRecursosPrestados(usuario);
         } else {
-            JOptionPane.showMessageDialog(this, "No se pudo registrar la devolución.");
+            JOptionPane.showMessageDialog(this, "❌ No se pudo registrar la devolución.");
         }
     }
 }

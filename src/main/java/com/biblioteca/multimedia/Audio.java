@@ -30,6 +30,14 @@ public class Audio extends Multimedia implements Reproducible {
 
     @Override
     public void ver() {
+        reproducir();
+    }
 
+    public int getDuracionMinutos() {
+        return duracionMinutos;
+    }
+
+    public void setDuracionMinutos(int duracionMinutos) {
+        this.duracionMinutos = duracionMinutos;
     }
 }

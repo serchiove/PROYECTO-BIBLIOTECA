@@ -61,5 +61,12 @@
     "titulo": "TESIS UTP",
     "autor": "SERGIO",
     "disponible": true
+  },
+  {
+    "duracionMinutos": 3,
+    "id": "1234",
+    "titulo": "NONI PRUEBA",
+    "autor": "NONI",
+    "disponible": true
   }
 ]

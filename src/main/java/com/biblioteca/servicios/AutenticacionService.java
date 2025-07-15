@@ -1,70 +1,74 @@
 package com.biblioteca.servicios;
 
 import com.biblioteca.usuarios.*;
-import com.google.gson.*;
 
-import java.io.FileReader;
-import java.io.IOException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AutenticacionService {
 
-    private List<Usuario> usuarios;
+    private Connection conexion;
 
-    public AutenticacionService() {
-        this.usuarios = cargarUsuariosDesdeJSON("Usuarios.json");
+    public AutenticacionService(Connection conexion) {
+        this.conexion = conexion;
     }
 
     public Usuario autenticar(String usuarioIngresado, String passwordIngresado) {
-        for (Usuario usuario : usuarios) {
-            if (usuario.getUsuario().equals(usuarioIngresado) &&
-                    usuario.getPassword().equals(passwordIngresado)) {
-                return usuario;
+        String sql = "SELECT * FROM usuarios WHERE usuario = ? AND contrasena = ?";
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, usuarioIngresado);
+            ps.setString(2, passwordIngresado);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String rol = rs.getString("rol");
+                String id = rs.getString("id");
+                String nombre = rs.getString("nombre");
+                String usuario = rs.getString("usuario");
+                String password = rs.getString("contrasena");
+
+                return construirUsuario(id, nombre, usuario, password, rol);
             }
+
+        } catch (SQLException e) {
+            System.err.println("Error en autenticación: " + e.getMessage());
         }
         return null;
     }
 
-    private List<Usuario> cargarUsuariosDesdeJSON(String archivo) {
-        List<Usuario> listaUsuarios = new ArrayList<>();
-        try (FileReader reader = new FileReader(archivo)) {
-            JsonArray jsonArray = JsonParser.parseReader(reader).getAsJsonArray();
+    public List<Usuario> obtenerTodosUsuarios() {
+        List<Usuario> lista = new ArrayList<>();
+        String sql = "SELECT * FROM usuarios";
 
-            for (JsonElement elem : jsonArray) {
-                JsonObject obj = elem.getAsJsonObject();
+        try (Statement stmt = conexion.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
-                if (!obj.has("tipo") || !obj.has("id") || !obj.has("nombre") ||
-                        !obj.has("usuario") || !obj.has("password")) {
-                    System.out.println("Usuario con campos faltantes: " + obj);
-                    continue; // saltar este usuario
-                }
+            while (rs.next()) {
+                String rol = rs.getString("rol");
+                String id = rs.getString("id");
+                String nombre = rs.getString("nombre");
+                String usuario = rs.getString("usuario");
+                String password = rs.getString("contrasena");
 
-                String tipo = obj.get("tipo").getAsString();
-                String id = obj.get("id").getAsString();
-                String nombre = obj.get("nombre").getAsString();
-                String usuario = obj.get("usuario").getAsString();
-                String password = obj.get("password").getAsString();
-
-                Usuario u = switch (tipo.toUpperCase()) {
-                    case "ADMIN" -> new Administrador(id, nombre, usuario, password);
-                    case "BIBLIOTECARIO" -> new Bibliotecario(id, nombre, usuario, password);
-                    case "ESTUDIANTE" -> new Estudiante(id, nombre, usuario, password);
-                    default -> {
-                        System.out.println("tipo desconocido: " + tipo);
-                        yield null;
-                    }
-                };
-
-                if (u != null) listaUsuarios.add(u);
+                Usuario u = construirUsuario(id, nombre, usuario, password, rol);
+                if (u != null) lista.add(u);
             }
 
-        } catch (IOException e) {
-            System.out.println("Error al cargar usuarios: " + e.getMessage());
-        } catch (IllegalStateException | JsonSyntaxException e) {
-            System.out.println("Formato JSON inválido en usuarios: " + e.getMessage());
+        } catch (SQLException e) {
+            System.err.println("Error al obtener usuarios: " + e.getMessage());
         }
 
-        return listaUsuarios;
+        return lista;
+    }
+
+    private Usuario construirUsuario(String id, String nombre, String usuario, String contrasena, String rol) {
+        return switch (rol.toUpperCase()) {
+            case "ADMIN" -> new Administrador(id, nombre, usuario, contrasena);
+            case "PROFESOR" -> new Profesor(id, nombre, usuario, contrasena);
+            case "ESTUDIANTE" -> new Estudiante(id, nombre, usuario, contrasena);
+            default -> null;
+        };
     }
 }

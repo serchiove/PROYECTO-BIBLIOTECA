@@ -102,4 +102,9 @@ public class Prestamo {
                 (devuelto ? ", Devuelto: " + fechaDevolucion : ", En curso") +
                 "]";
     }
+
+    public String getIdMultimedia() {
+        String idMultimedia = null;
+        return idMultimedia;
+    }
 }

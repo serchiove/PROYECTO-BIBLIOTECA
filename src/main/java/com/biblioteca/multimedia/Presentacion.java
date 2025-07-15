@@ -12,12 +12,7 @@ public class Presentacion extends Multimedia implements Visualizable {
         this.numeroDiapositivas = numeroDiapositivas;
     }
 
-    // Constructor vacío requerido por Gson
-    public Presentacion() {
-        super(null, null, null, true); // puedes cambiar true a false si lo prefieres
-    }
-
-    // Getter y Setter necesarios para Gson
+    // Getter y Setter
     public int getNumeroDiapositivas() {
         return numeroDiapositivas;
     }
@@ -43,4 +38,3 @@ public class Presentacion extends Multimedia implements Visualizable {
                 id, titulo, autor, numeroDiapositivas);
     }
 }
-

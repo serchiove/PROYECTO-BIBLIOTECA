@@ -9,8 +9,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.Duration;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class VerMisPrestamosFrame extends JFrame {
@@ -21,7 +21,7 @@ public class VerMisPrestamosFrame extends JFrame {
     private final DefaultTableModel modelo;
 
     public VerMisPrestamosFrame(Usuario estudiante, PrestamoService prestamoService) {
-        super("Mis Préstamos");
+        super("📚 Mis Préstamos Activos");
         this.estudiante = estudiante;
         this.prestamoService = prestamoService;
 
@@ -30,7 +30,7 @@ public class VerMisPrestamosFrame extends JFrame {
         }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Evita edición
+                return false; // evita que el usuario edite directamente
             }
         };
 
@@ -40,11 +40,9 @@ public class VerMisPrestamosFrame extends JFrame {
         tabla.setDefaultRenderer(Object.class, new VencimientoRenderer());
 
         JScrollPane scroll = new JScrollPane(tabla);
-
-        setLayout(new BorderLayout(10, 10));
         add(scroll, BorderLayout.CENTER);
 
-        setSize(750, 400);
+        setSize(800, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
@@ -53,27 +51,33 @@ public class VerMisPrestamosFrame extends JFrame {
     }
 
     private void cargarMisPrestamos() {
-        modelo.setRowCount(0); // Limpia tabla
+        modelo.setRowCount(0); // Limpia la tabla antes de cargar
+
         List<Prestamo> prestamos = prestamoService.listarPrestamosActivos();
 
         for (Prestamo p : prestamos) {
-            if (p.getIdUsuario().equals(estudiante.getId())) {
-                LocalDate hoy = LocalDate.now();
-                long diasRestantes = Duration.between(hoy.atStartOfDay(), p.getFechaFin().atStartOfDay()).toDays();
+            if (!p.getIdUsuario().equals(estudiante.getId())) continue;
 
-                Multimedia recurso = prestamoService.getMultimediaService().obtenerPorId(p.getIdRecurso());
-                String titulo = (recurso != null) ? recurso.getTitulo() : "Recurso no encontrado";
+            LocalDate hoy = LocalDate.now();
+            LocalDate fechaInicio = p.getFechaInicio();
+            LocalDate fechaFin = p.getFechaFin() != null ? p.getFechaFin() : fechaInicio.plusDays(7);
+            long diasRestantes = ChronoUnit.DAYS.between(hoy, fechaFin);
 
-                String estadoDias = (diasRestantes >= 0) ? diasRestantes + " días" : "VENCIDO";
+            String estadoDias = diasRestantes >= 0 ? diasRestantes + " días" : "VENCIDO";
 
-                modelo.addRow(new Object[]{
-                        p.getId(),
-                        titulo,
-                        p.getFechaInicio(),
-                        p.getFechaFin(),
-                        estadoDias
-                });
+            String titulo = "Recurso no encontrado";
+            Multimedia recurso = prestamoService.buscarRecursoPorId(p.getIdRecurso());
+            if (recurso != null) {
+                titulo = recurso.getTitulo();
             }
+
+            modelo.addRow(new Object[]{
+                    p.getId(),
+                    titulo,
+                    fechaInicio,
+                    fechaFin,
+                    estadoDias
+            });
         }
     }
 
@@ -88,12 +92,16 @@ public class VerMisPrestamosFrame extends JFrame {
                 JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column
         ) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            String diasRestantes = (String) table.getModel().getValueAt(row, 4);
-            if (diasRestantes.contains("VENCIDO")) {
-                c.setForeground(Color.RED);
-            } else {
-                c.setForeground(Color.BLACK);
+
+            if (!isSelected) {
+                Object val = table.getModel().getValueAt(row, 4);
+                if (val != null && val.toString().contains("VENCIDO")) {
+                    c.setForeground(Color.RED);
+                } else {
+                    c.setForeground(Color.BLACK);
+                }
             }
+
             return c;
         }
     }

@@ -4,9 +4,6 @@ import com.biblioteca.interfaces.Descargable;
 import com.biblioteca.interfaces.Reproducible;
 import com.biblioteca.interfaces.Visualizable;
 
-/**
- * Clase base abstracta para representar un recurso multimedia.
- */
 public abstract class Multimedia implements Descargable, Reproducible, Visualizable {
     protected String id;
     protected String titulo;
@@ -24,12 +21,30 @@ public abstract class Multimedia implements Descargable, Reproducible, Visualiza
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+    public String getDescripcion() {
+        return "Título: " + titulo + ", Autor: " + autor;
+    }
+
     public String getTitulo() {
         return titulo;
+    }
+    public String getNombre() {
+        return getTitulo(); // ya que 'titulo' representa el "nombre" del recurso
+    }
+
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
     }
 
     public String getAutor() {
         return autor;
+    }
+
+    public void setAutor(String autor) {
+        this.autor = autor;
     }
 
     public boolean isDisponible() {
@@ -40,38 +55,23 @@ public abstract class Multimedia implements Descargable, Reproducible, Visualiza
         this.disponible = disponible;
     }
 
-    /**
-     * Muestra la información detallada del recurso.
-     */
     public abstract void mostrarInformacion();
 
-    /**
-     * Muestra el recurso en una descarga simulada.
-     */
     @Override
     public void descargar() {
         System.out.println("📥 Descargando recurso: " + titulo);
     }
 
-    /**
-     * Muestra el recurso en una reproducción simulada.
-     */
     @Override
     public void reproducir() {
         System.out.println("▶️ Reproduciendo recurso: " + titulo);
     }
 
-    /**
-     * Muestra el recurso en una visualización simulada.
-     */
     @Override
     public void visualizar() {
         System.out.println("👁️ Visualizando recurso: " + titulo);
     }
 
-    /**
-     * Para mostrar correctamente en JComboBox o listas.
-     */
     @Override
     public String toString() {
         return titulo + " (" + autor + ")";

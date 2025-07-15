@@ -46,12 +46,15 @@ public class RegistrarDevolucionFrame extends JFrame {
         DefaultListModel<Prestamo> modelo = new DefaultListModel<>();
         List<Prestamo> prestamos;
 
-        if (usuario.getRol().equalsIgnoreCase("ADMIN") || usuario.getRol().equalsIgnoreCase("BIBLIOTECARIO")) {
+        // Usuarios ADMIN y BIBLIOTECARIO ven todos los préstamos activos
+        if ("ADMIN".equalsIgnoreCase(usuario.getRol()) || "BIBLIOTECARIO".equalsIgnoreCase(usuario.getRol())) {
             prestamos = prestamoService.listarPrestamos();
         } else {
+            // Los estudiantes solo los suyos
             prestamos = prestamoService.prestamosPorUsuario(usuario.getId());
         }
 
+        // Solo prestamos activos (no devueltos)
         for (Prestamo p : prestamos) {
             if (!p.isDevuelto()) {
                 modelo.addElement(p);
@@ -59,6 +62,10 @@ public class RegistrarDevolucionFrame extends JFrame {
         }
 
         listaPrestamos.setModel(modelo);
+
+        if (modelo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay préstamos activos para mostrar.");
+        }
     }
 
     private void registrarDevolucion() {

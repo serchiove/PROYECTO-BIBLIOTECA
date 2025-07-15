@@ -10,18 +10,24 @@ import com.biblioteca.usuarios.Usuario;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.sql.SQLException;
 import java.util.List;
 
 public class VerTodosLosPrestamosFrame extends JFrame {
 
     private final PrestamoService prestamoService;
+    private final UsuarioDAO usuarioDAO;
+    private final MultimediaDAO multimediaDAO;
+
     private JTable tabla;
     private DefaultTableModel modelo;
     private JLabel etiquetaTotal;
 
-    public VerTodosLosPrestamosFrame(PrestamoService prestamoService) {
+    public VerTodosLosPrestamosFrame(PrestamoService prestamoService, UsuarioDAO usuarioDAO, MultimediaDAO multimediaDAO) {
         super("Listado de Préstamos Activos");
         this.prestamoService = prestamoService;
+        this.usuarioDAO = usuarioDAO;
+        this.multimediaDAO = multimediaDAO;
 
         initUI();
         cargarPrestamos();
@@ -44,19 +50,14 @@ public class VerTodosLosPrestamosFrame extends JFrame {
         };
 
         tabla = new JTable(modelo);
-        tabla.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        tabla.setRowHeight(22);
+        JScrollPane scrollPane = new JScrollPane(tabla);
 
-        JScrollPane scroll = new JScrollPane(tabla);
-        scroll.setBorder(BorderFactory.createTitledBorder("📑 Préstamos Activos"));
+        etiquetaTotal = new JLabel("Total de préstamos activos: 0");
+        etiquetaTotal.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        etiquetaTotal.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 
-        etiquetaTotal = new JLabel(" ");
-        etiquetaTotal.setFont(new Font("SansSerif", Font.BOLD, 12));
-        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panelInferior.add(etiquetaTotal);
-
-        add(scroll, BorderLayout.CENTER);
-        add(panelInferior, BorderLayout.SOUTH);
+        add(scrollPane, BorderLayout.CENTER);
+        add(etiquetaTotal, BorderLayout.SOUTH);
 
         setVisible(true);
     }
@@ -66,8 +67,13 @@ public class VerTodosLosPrestamosFrame extends JFrame {
         List<Prestamo> prestamos = prestamoService.listarPrestamosActivos();
 
         for (Prestamo p : prestamos) {
-            Usuario usuario = UsuarioDAO.obtenerPorId(p.getIdUsuario());
-            Multimedia recurso = MultimediaDAO.obtenerPorId(p.getIdRecurso());
+            Usuario usuario = null;
+            try {
+                usuario = usuarioDAO.obtenerPorId(p.getIdUsuario());
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            Multimedia recurso = multimediaDAO.obtenerPorId(p.getIdRecurso());
 
             String nombreUsuario = (usuario != null) ? usuario.getNombre() : "Desconocido";
             String tituloRecurso = (recurso != null) ? recurso.getTitulo() : "Desconocido";
@@ -83,6 +89,6 @@ public class VerTodosLosPrestamosFrame extends JFrame {
             });
         }
 
-        etiquetaTotal.setText("otal de préstamos activos: " + modelo.getRowCount());
+        etiquetaTotal.setText("Total de préstamos activos: " + prestamos.size());
     }
 }

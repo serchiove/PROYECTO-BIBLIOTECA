@@ -1,7 +1,7 @@
 package com.biblioteca.gui;
 
-import com.biblioteca.usuarios.Usuario;
 import com.biblioteca.servicios.UsuarioService;
+import com.biblioteca.usuarios.Usuario;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -10,96 +10,123 @@ import java.util.List;
 
 public class GestionUsuariosFrame extends JFrame {
 
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
+
     private JTable tablaUsuarios;
-    private DefaultTableModel modeloTabla;
+    private DefaultTableModel modeloUsuarios;
+    private JButton btnAgregar;
+    private JButton btnEliminar;
 
-    public GestionUsuariosFrame() {
-        super("Gestión de Usuarios");
-        usuarioService = new UsuarioService();
-        initUI();
-        cargarUsuarios();
-    }
+    public GestionUsuariosFrame(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
 
-    private void initUI() {
-        Color rojoUTP = new Color(183, 28, 28);
-        Color grisClaro = new Color(245, 245, 245);
-        getContentPane().setBackground(grisClaro);
-        setLayout(new BorderLayout());
-
-        setSize(700, 450);
+        setTitle("Gestión de Usuarios");
+        setSize(600, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-        JLabel encabezado = new JLabel("👥 Gestión de Usuarios", SwingConstants.CENTER);
-        encabezado.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        encabezado.setForeground(rojoUTP);
-        encabezado.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        add(encabezado, BorderLayout.NORTH);
-
-        modeloTabla = new DefaultTableModel(new Object[]{"ID", "Nombre", "Usuario", "Rol"}, 0);
-        tablaUsuarios = new JTable(modeloTabla);
-        JScrollPane scrollPane = new JScrollPane(tablaUsuarios);
-        tablaUsuarios.setFillsViewportHeight(true);
-        add(scrollPane, BorderLayout.CENTER);
-
-        JButton btnAgregar = new JButton("➕ Registrar Estudiante");
-        btnAgregar.setBackground(rojoUTP);
-        btnAgregar.setForeground(Color.WHITE);
-        btnAgregar.setFocusPainted(false);
-        btnAgregar.addActionListener(e -> registrarEstudiante());
-
-        JButton btnActualizar = new JButton("🔄 Actualizar Lista");
-        btnActualizar.setBackground(rojoUTP);
-        btnActualizar.setForeground(Color.WHITE);
-        btnActualizar.setFocusPainted(false);
-        btnActualizar.addActionListener(e -> cargarUsuarios());
-
-        JPanel panelBotones = new JPanel();
-        panelBotones.setBackground(grisClaro);
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        panelBotones.add(btnAgregar);
-        panelBotones.add(btnActualizar);
-
-        add(panelBotones, BorderLayout.SOUTH);
+        initUI();
+        cargarUsuarios();
         setVisible(true);
     }
 
+    private void initUI() {
+        setLayout(new BorderLayout(10, 10));
+
+        modeloUsuarios = new DefaultTableModel(new Object[]{"ID", "Nombre Completo", "Rol"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        tablaUsuarios = new JTable(modeloUsuarios);
+        JScrollPane scrollPane = new JScrollPane(tablaUsuarios);
+
+        JPanel panelBotones = new JPanel();
+        btnAgregar = new JButton("Agregar Usuario");
+        btnEliminar = new JButton("Eliminar Usuario");
+
+        btnAgregar.addActionListener(e -> agregarUsuario());
+        btnEliminar.addActionListener(e -> eliminarUsuario());
+
+        panelBotones.add(btnAgregar);
+        panelBotones.add(btnEliminar);
+
+        add(scrollPane, BorderLayout.CENTER);
+        add(panelBotones, BorderLayout.SOUTH);
+    }
+
     private void cargarUsuarios() {
-        modeloTabla.setRowCount(0);
+        modeloUsuarios.setRowCount(0);
         List<Usuario> usuarios = usuarioService.listarUsuarios();
+
         for (Usuario u : usuarios) {
-            modeloTabla.addRow(new Object[]{
-                    u.getId(), u.getNombre(), u.getUsuario(), u.getRol()
+            modeloUsuarios.addRow(new Object[]{
+                    u.getId(),
+                    u.getNombre(),
+                    u.getRol()
             });
         }
     }
 
-    private void registrarEstudiante() {
-        JTextField campoId = new JTextField();
-        JTextField campoNombre = new JTextField();
-        JTextField campoCorreo = new JTextField();
-        JTextField campoCarrera = new JTextField();
+    private void agregarUsuario() {
+        JTextField txtId = new JTextField();
+        JTextField txtNombre = new JTextField();
+        JTextField txtUsuario = new JTextField(); // <- NUEVO CAMPO
+        JTextField txtRol = new JTextField();
+        JTextField txtPassword = new JTextField();
 
         Object[] campos = {
-                "ID:", campoId,
-                "Nombre:", campoNombre,
-                "Correo:", campoCorreo,
-                "Carrera:", campoCarrera
+                "ID:", txtId,
+                "Nombre completo:", txtNombre,
+                "Usuario (login):", txtUsuario,  // <- NUEVO CAMPO
+                "Rol (ADMIN, PROFESOR, ESTUDIANTE):", txtRol,
+                "Password:", txtPassword
         };
 
-        int opcion = JOptionPane.showConfirmDialog(
-                this, campos, "Nuevo Estudiante", JOptionPane.OK_CANCEL_OPTION);
-
+        int opcion = JOptionPane.showConfirmDialog(this, campos, "Agregar Usuario", JOptionPane.OK_CANCEL_OPTION);
         if (opcion == JOptionPane.OK_OPTION) {
-            usuarioService.registrarEstudiante(
-                    campoId.getText(),
-                    campoNombre.getText(),
-                    campoCorreo.getText(),
-                    campoCarrera.getText()
-            );
-            cargarUsuarios();
-            JOptionPane.showMessageDialog(this, "Estudiante registrado correctamente.");
+            String id = txtId.getText().trim();
+            String nombre = txtNombre.getText().trim();
+            String usuarioLogin = txtUsuario.getText().trim(); // <- NUEVO
+            String rol = txtRol.getText().trim().toUpperCase();
+            String password = txtPassword.getText().trim();
+
+            if (id.isEmpty() || nombre.isEmpty() || usuarioLogin.isEmpty() || rol.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Debe completar todos los campos.");
+                return;
+            }
+
+            boolean creado = usuarioService.crearUsuario(id, nombre, usuarioLogin, password, rol);
+            if (creado) {
+                JOptionPane.showMessageDialog(this, "Usuario creado con éxito.");
+                cargarUsuarios();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo crear el usuario.");
+            }
         }
     }
+
+
+    private void eliminarUsuario() {
+        int filaSeleccionada = tablaUsuarios.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione un usuario para eliminar.");
+            return;
+        }
+
+        String idUsuario = (String) modeloUsuarios.getValueAt(filaSeleccionada, 0);
+        int confirmacion = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar al usuario seleccionado?", "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            boolean eliminado = usuarioService.eliminarUsuario(idUsuario);
+            if (eliminado) {
+                JOptionPane.showMessageDialog(this, "Usuario eliminado.");
+                cargarUsuarios();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo eliminar el usuario.");
+            }
+        }
+    }
+
 }

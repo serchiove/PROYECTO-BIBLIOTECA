@@ -13,8 +13,8 @@ import java.awt.*;
 import java.util.List;
 
 public class MisRecursosInteractivosFrame extends JFrame {
-    private Usuario usuario;
-    private PrestamoService prestamoService;
+    private final Usuario usuario;
+    private final PrestamoService prestamoService;
     private JPanel panelRecursos;
     private JTextArea areaMensajes;
 
@@ -51,11 +51,12 @@ public class MisRecursosInteractivosFrame extends JFrame {
         titulo.setForeground(rojoUTP);
         titulo.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().setBackground(fondoClaro);
-        getContentPane().add(titulo, BorderLayout.NORTH);
-        getContentPane().add(scrollMensajes, BorderLayout.SOUTH);
-        getContentPane().add(scrollLista, BorderLayout.CENTER);
+        Container contentPane = getContentPane();
+        contentPane.setLayout(new BorderLayout());
+        contentPane.setBackground(fondoClaro);
+        contentPane.add(titulo, BorderLayout.NORTH);
+        contentPane.add(scrollLista, BorderLayout.CENTER);
+        contentPane.add(scrollMensajes, BorderLayout.SOUTH);
 
         cargarRecursosReservadosInteractivos();
     }
@@ -64,13 +65,13 @@ public class MisRecursosInteractivosFrame extends JFrame {
         panelRecursos.removeAll();
         areaMensajes.setText("");
 
-        List<Prestamo> prestamos = prestamoService.listarPrestamosPorUsuario(usuario.getNombreUsuario());
+        List<Prestamo> prestamos = prestamoService.listarPrestamosPorUsuario(usuario.getUsuario());
         boolean hayRecursos = false;
 
         for (Prestamo p : prestamos) {
             if (!p.isDevuelto()) {
-                Multimedia recurso = prestamoService.getMultimediaService().obtenerPorId(p.getIdRecurso());
-                if (recurso instanceof Descargable || recurso instanceof Visualizable || recurso instanceof Reproducible) {
+                Multimedia recurso = prestamoService.getMultimediaService().buscarPorId(p.getIdRecurso());
+                if (recurso != null && (recurso instanceof Descargable || recurso instanceof Visualizable || recurso instanceof Reproducible)) {
                     hayRecursos = true;
                     JPanel panelItem = crearPanelRecurso(recurso);
                     panelRecursos.add(panelItem);
@@ -98,8 +99,12 @@ public class MisRecursosInteractivosFrame extends JFrame {
             JButton btnDescargar = new JButton("⬇️ Descargar");
             btnDescargar.setBackground(new Color(200, 230, 201));
             btnDescargar.addActionListener(e -> {
-                ((Descargable) recurso).descargar();
-                areaMensajes.append("⬇️ Recurso descargado: " + recurso.getTitulo() + "\n");
+                try {
+                    ((Descargable) recurso).descargar();
+                    areaMensajes.append("⬇️ Recurso descargado: " + recurso.getTitulo() + "\n");
+                } catch (Exception ex) {
+                    areaMensajes.append("⚠️ Error al descargar: " + recurso.getTitulo() + "\n");
+                }
             });
             panel.add(btnDescargar);
         }
@@ -108,8 +113,12 @@ public class MisRecursosInteractivosFrame extends JFrame {
             JButton btnVisualizar = new JButton("👁️ Visualizar");
             btnVisualizar.setBackground(new Color(197, 202, 233));
             btnVisualizar.addActionListener(e -> {
-                ((Visualizable) recurso).visualizar();
-                areaMensajes.append("👁️ Recurso visualizado: " + recurso.getTitulo() + "\n");
+                try {
+                    ((Visualizable) recurso).visualizar();
+                    areaMensajes.append("👁️ Recurso visualizado: " + recurso.getTitulo() + "\n");
+                } catch (Exception ex) {
+                    areaMensajes.append("⚠️ Error al visualizar: " + recurso.getTitulo() + "\n");
+                }
             });
             panel.add(btnVisualizar);
         }
@@ -118,8 +127,12 @@ public class MisRecursosInteractivosFrame extends JFrame {
             JButton btnReproducir = new JButton("🔊 Reproducir");
             btnReproducir.setBackground(new Color(255, 224, 178));
             btnReproducir.addActionListener(e -> {
-                ((Reproducible) recurso).reproducir();
-                areaMensajes.append("🔊 Recurso reproducido: " + recurso.getTitulo() + "\n");
+                try {
+                    ((Reproducible) recurso).reproducir();
+                    areaMensajes.append("🔊 Recurso reproducido: " + recurso.getTitulo() + "\n");
+                } catch (Exception ex) {
+                    areaMensajes.append("⚠️ Error al reproducir: " + recurso.getTitulo() + "\n");
+                }
             });
             panel.add(btnReproducir);
         }

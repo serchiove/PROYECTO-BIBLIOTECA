@@ -1,13 +1,12 @@
 package com.biblioteca.usuarios;
 
-/**
- * Clase base abstracta para representar un usuario del sistema.
- */
 public abstract class Usuario {
-    protected String id;
-    protected String nombre;
-    protected String usuario;
-    protected String password;
+    private String id;
+    private String nombre;
+    private String usuario;
+    private String password;
+
+    public Usuario() {}
 
     public Usuario(String id, String nombre, String usuario, String password) {
         this.id = id;
@@ -16,35 +15,27 @@ public abstract class Usuario {
         this.password = password;
     }
 
+    public abstract String getRol();
+
+    // Getters y Setters
+    public String getId() { return id; }
+
+    public void setId(String id) { this.id = id; }
+
+    public String getNombre() { return nombre; }
+
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public String getUsuario() { return usuario; }
+
+    public void setUsuario(String usuario) { this.usuario = usuario; }
+
+    public String getPassword() { return password; }
+
+    public void setPassword(String password) { this.password = password; }
+
     @Override
     public String toString() {
-        return nombre; // o nombre + " (" + id + ")" si deseas mostrar más detalle
+        return getNombre();
     }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getUsuario() {
-        return usuario;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-//Devuelve el alias del usuario
-
-    public String getNombreUsuario() {
-        return usuario;
-    }
-
-
-//Metodo abstracto que debe devolver el rol del usuario.
-
-    public abstract String getRol();
 }

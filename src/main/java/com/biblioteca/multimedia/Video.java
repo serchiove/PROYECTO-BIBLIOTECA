@@ -11,9 +11,10 @@ public class Video extends Multimedia implements Reproducible {
         this.duracionSegundos = duracionSegundos;
     }
 
-    public Video() {
-        super(null, null, null, true); // o false
-    }
+    // Opcional constructor vacío solo si lo necesitas
+    // public Video() {
+    //     super(null, null, null, true);
+    // }
 
     @Override
     public void reproducir() {
@@ -42,6 +43,6 @@ public class Video extends Multimedia implements Reproducible {
 
     @Override
     public void ver() {
-
+        reproducir();
     }
 }

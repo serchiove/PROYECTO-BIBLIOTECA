@@ -33,5 +33,12 @@
     "usuario": "sermi7626@gmail.com",
     "password": "Serchio1221*",
     "tipo": "Estudiante"
+  },
+  {
+    "id": "6",
+    "nombre": "Christian",
+    "usuario": "xd",
+    "password": "noni123",
+    "tipo": "Estudiante"
   }
 ]

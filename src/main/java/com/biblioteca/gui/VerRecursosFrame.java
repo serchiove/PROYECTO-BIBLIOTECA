@@ -21,7 +21,7 @@ public class VerRecursosFrame extends JFrame {
     public VerRecursosFrame(Usuario usuario, PrestamoService prestamoService) {
         this.usuario = usuario;
         this.prestamoService = prestamoService;
-        this.multimediaService = prestamoService.getMultimediaService();
+        this.multimediaService = prestamoService != null ? prestamoService.getMultimediaService() : null;
 
         setTitle("📂 Recursos Disponibles");
         setSize(650, 500);
@@ -36,9 +36,24 @@ public class VerRecursosFrame extends JFrame {
         areaMensajes.setEditable(false);
         areaMensajes.setFont(new Font("Monospaced", Font.PLAIN, 12));
         areaMensajes.setBackground(new Color(245, 245, 245));
+        areaMensajes.setLineWrap(true);
+        areaMensajes.setWrapStyleWord(true);
 
         initUI();
         cargarRecursosDisponibles();
+
+        // Mostrar info del recurso seleccionado
+        listaRecursos.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Multimedia seleccionado = listaRecursos.getSelectedValue();
+                if (seleccionado != null) {
+                    areaMensajes.setText(detalleRecurso(seleccionado));
+                } else {
+                    areaMensajes.setText("");
+                }
+            }
+        });
+
         setVisible(true);
     }
 
@@ -46,13 +61,11 @@ public class VerRecursosFrame extends JFrame {
         JPanel contenido = new JPanel(new BorderLayout(10, 10));
         setContentPane(contenido);
 
-        // Panel superior con lista de recursos
         JPanel panelLista = new JPanel(new BorderLayout());
         panelLista.setBorder(BorderFactory.createTitledBorder("📚 Lista de recursos disponibles"));
         JScrollPane scrollRecursos = new JScrollPane(listaRecursos);
         panelLista.add(scrollRecursos, BorderLayout.CENTER);
 
-        // Panel inferior con área de mensajes
         JPanel panelMensajes = new JPanel(new BorderLayout());
         panelMensajes.setBorder(BorderFactory.createTitledBorder("📋 Información"));
         JScrollPane scrollMensajes = new JScrollPane(areaMensajes);
@@ -64,6 +77,13 @@ public class VerRecursosFrame extends JFrame {
 
     private void cargarRecursosDisponibles() {
         modeloLista.clear();
+
+        if (multimediaService == null) {
+            areaMensajes.setText("Error: Servicio de multimedia no disponible.");
+            JOptionPane.showMessageDialog(this, "Servicio de multimedia no está disponible.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         List<Multimedia> disponibles = multimediaService.listarRecursosDisponibles();
 
         if (disponibles == null || disponibles.isEmpty()) {
@@ -75,5 +95,15 @@ public class VerRecursosFrame extends JFrame {
             }
             areaMensajes.setText("Se encontraron " + modeloLista.size() + " recurso(s) disponible(s).");
         }
+    }
+
+    private String detalleRecurso(Multimedia m) {
+        if (m == null) return "";
+
+        return "Título: " + m.getTitulo() + "\n"
+                + "Autor: " + (m.getAutor() != null ? m.getAutor() : "Desconocido") + "\n"
+                + "Tipo: " + m.getClass().getSimpleName() + "\n"
+                + "Disponible: " + (m.isDisponible() ? "Sí" : "No") + "\n"
+                + "Descripción: " + (m.getDescripcion() != null ? m.getDescripcion() : "No disponible");
     }
 }

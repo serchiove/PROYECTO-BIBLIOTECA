@@ -1,36 +1,107 @@
 package com.biblioteca.data;
 
 import com.biblioteca.multimedia.LibroDigital;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.reflect.Type;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LibroDAO {
 
-    private static final String ARCHIVO_LIBROS = "libros.json";
+    private Connection conexion;
 
-    public static List<LibroDigital> cargarLibros() {
+    public LibroDAO(Connection conexion) {
+        this.conexion = conexion;
+    }
+
+    public List<LibroDigital> obtenerTodosLosLibros() {
         List<LibroDigital> libros = new ArrayList<>();
-        try (FileReader reader = new FileReader(ARCHIVO_LIBROS)) {
-            Type listType = new TypeToken<ArrayList<LibroDigital>>() {}.getType();
-            libros = new Gson().fromJson(reader, listType);
-        } catch (IOException e) {
-            System.out.println("No se pudo leer el archivo de libros. Se usará una lista vacía.");
+        String sql = "SELECT * FROM libros";
+
+        try (PreparedStatement stmt = conexion.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                LibroDigital libro = new LibroDigital(
+                        rs.getString("id"),
+                        rs.getString("titulo"),
+                        rs.getString("autor"),
+                        rs.getString("isbn"),
+                        rs.getInt("tamanoMB"),
+                        rs.getBoolean("disponible")
+                );
+                libros.add(libro);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al obtener los libros: " + e.getMessage());
         }
+
         return libros;
     }
 
-    public static void guardarLibros(List<LibroDigital> libros) {
-        try (FileWriter writer = new FileWriter(ARCHIVO_LIBROS)) {
-            new Gson().toJson(libros, writer);
-        } catch (IOException e) {
-            System.out.println("Error al guardar los libros: " + e.getMessage());
+    public void insertarLibro(LibroDigital libro) {
+        String sql = "INSERT INTO libros (id, titulo, autor, isbn, tamanoMB, disponible) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setString(1, libro.getId());
+            stmt.setString(2, libro.getTitulo());
+            stmt.setString(3, libro.getAutor());
+            stmt.setString(4, libro.getIsbn());
+            stmt.setInt(5, libro.getTamanoMB());
+            stmt.setBoolean(6, libro.isDisponible());
+            stmt.executeUpdate();
+            System.out.println("✅ Libro insertado correctamente.");
+        } catch (SQLException e) {
+            System.err.println("❌ Error al insertar el libro: " + e.getMessage());
         }
+    }
+
+    public void actualizarDisponibilidad(String id, boolean disponible) {
+        String sql = "UPDATE libros SET disponible = ? WHERE id = ?";
+
+        try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setBoolean(1, disponible);
+            stmt.setString(2, id);
+            stmt.executeUpdate();
+            System.out.println("✅ Disponibilidad actualizada.");
+        } catch (SQLException e) {
+            System.err.println("❌ Error al actualizar la disponibilidad: " + e.getMessage());
+        }
+    }
+
+    public void eliminarLibro(String id) {
+        String sql = "DELETE FROM libros WHERE id = ?";
+
+        try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            stmt.executeUpdate();
+            System.out.println("✅ Libro eliminado.");
+        } catch (SQLException e) {
+            System.err.println("❌ Error al eliminar el libro: " + e.getMessage());
+        }
+    }
+
+    // ✅ Método adicional opcional
+    public LibroDigital buscarLibroPorId(String id) {
+        String sql = "SELECT * FROM libros WHERE id = ?";
+        try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new LibroDigital(
+                            rs.getString("id"),
+                            rs.getString("titulo"),
+                            rs.getString("autor"),
+                            rs.getString("isbn"),
+                            rs.getInt("tamanoMB"),
+                            rs.getBoolean("disponible")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Error al buscar el libro: " + e.getMessage());
+        }
+        return null;
     }
 }

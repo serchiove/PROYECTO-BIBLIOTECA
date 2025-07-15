@@ -1,71 +1,82 @@
 package com.biblioteca.data;
 
-import com.biblioteca.usuarios.Bibliotecario;
-import com.biblioteca.usuarios.Estudiante;
-import com.biblioteca.usuarios.Usuario;
-import com.google.gson.*;
+import com.biblioteca.usuarios.*;
 
-import java.io.IOException;
-import java.util.*;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UsuarioDAO {
 
-    private static final String RUTA = "usuarios.json";
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private final Connection connection;
 
-    public static List<Usuario> cargarUsuarios() {
-        List<Usuario> usuarios = new ArrayList<>();
-        try {
-            String json = ArchivoUtil.leerArchivo(RUTA);
-            JsonArray array = JsonParser.parseString(json).getAsJsonArray();
+    public UsuarioDAO(Connection connection) {
+        this.connection = connection;
+    }
 
-            for (JsonElement elem : array) {
-                JsonObject obj = elem.getAsJsonObject();
-                String tipo = obj.get("tipo").getAsString();
-
-                switch (tipo) {
-                    case "Estudiante":
-                        usuarios.add(gson.fromJson(obj, Estudiante.class));
-                        break;
-                    case "Bibliotecario":
-                        usuarios.add(gson.fromJson(obj, Bibliotecario.class));
-                        break;
-                    default:
-                        System.err.println("Tipo desconocido de usuario: " + tipo);
-                        break;
+    public Usuario obtenerPorId(String id) throws SQLException {
+        String sql = "SELECT * FROM usuarios WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return construirUsuario(rs);
                 }
-            }
-
-        } catch (IOException | IllegalStateException e) {
-            System.err.println("Error al cargar usuarios: " + e.getMessage());
-        }
-
-        return usuarios;
-    }
-
-    public static void guardarUsuarios(List<Usuario> usuarios) {
-        JsonArray array = new JsonArray();
-
-        for (Usuario u : usuarios) {
-            JsonObject obj = (JsonObject) gson.toJsonTree(u);
-            obj.addProperty("tipo", u.getClass().getSimpleName());  // Esto asegura Estudiante o Bibliotecario
-            array.add(obj);
-        }
-
-        try {
-            ArchivoUtil.guardarArchivo(RUTA, gson.toJson(array));
-        } catch (IOException e) {
-            System.err.println("Error al guardar usuarios: " + e.getMessage());
-        }
-    }
-
-    public static Usuario obtenerPorId(String id) {
-        List<Usuario> usuarios = cargarUsuarios();
-        for (Usuario u : usuarios) {
-            if (u.getId().equals(id)) {
-                return u;
             }
         }
         return null;
+    }
+
+    public List<Usuario> listar() throws SQLException {
+        List<Usuario> usuarios = new ArrayList<>();
+        String sql = "SELECT * FROM usuarios";
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                usuarios.add(construirUsuario(rs));
+            }
+        }
+        return usuarios;
+    }
+
+
+    public boolean agregar(Usuario usuario) throws SQLException {
+        String sql = "INSERT INTO usuarios (id, nombre, usuario, contrasena, rol) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, usuario.getId());
+            ps.setString(2, usuario.getNombre());
+            ps.setString(3, usuario.getUsuario());
+            ps.setString(4, usuario.getPassword());
+            ps.setString(5, usuario.getRol());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean eliminar(String id) throws SQLException {
+        String sql = "DELETE FROM usuarios WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, id);
+            int filasAfectadas = ps.executeUpdate();
+            return filasAfectadas > 0;
+        }
+    }
+
+    private Usuario construirUsuario(ResultSet rs) throws SQLException {
+        String id = rs.getString("id");
+        String nombre = rs.getString("nombre");
+        String usuario = rs.getString("usuario");
+        String password = rs.getString("contrasena");
+        String rol = rs.getString("rol");
+
+        switch (rol.toUpperCase()) {
+            case "ESTUDIANTE":
+                return new Estudiante(id, nombre, usuario, password);
+            case "PROFESOR":
+                return new Profesor(id, nombre, usuario, password);
+            case "ADMIN":
+                return new Administrador(id, nombre, usuario, password);
+            default:
+                throw new SQLException("Rol desconocido: " + rol);
+        }
     }
 }

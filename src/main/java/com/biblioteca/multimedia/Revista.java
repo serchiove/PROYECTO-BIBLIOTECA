@@ -11,8 +11,13 @@ public class Revista extends Multimedia implements Descargable {
         this.numero = numero;
     }
 
-    public Revista() {
-        super(null, null, null, true); // o false
+    // Getters y Setters
+    public int getNumero() {
+        return numero;
+    }
+
+    public void setNumero(int numero) {
+        this.numero = numero;
     }
 
     @Override
@@ -26,15 +31,6 @@ public class Revista extends Multimedia implements Descargable {
                 id, titulo, autor, numero);
     }
 
-    // Getters y Setters necesarios para Gson
-    public int getNumero() {
-        return numero;
-    }
-
-    public void setNumero(int numero) {
-        this.numero = numero;
-    }
-
     @Override
     public String toString() {
         return String.format("Revista - ID: %s, Título: %s, Autor: %s, Número: %d",
@@ -43,6 +39,6 @@ public class Revista extends Multimedia implements Descargable {
 
     @Override
     public void ver() {
-
+        // Puedes implementar o dejar vacío si no es relevante
     }
 }
