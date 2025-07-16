@@ -104,7 +104,7 @@ public class Prestamo {
     }
 
     public String getIdMultimedia() {
-        String idMultimedia = null;
-        return idMultimedia;
+        return idRecurso;
     }
+
 }

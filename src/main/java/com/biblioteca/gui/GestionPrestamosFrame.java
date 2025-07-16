@@ -18,7 +18,7 @@ public class GestionPrestamosFrame extends JFrame {
     private final PrestamoService prestamoService;
     private final UsuarioService usuarioService;
     private final MultimediaService multimediaService;
-    private final Usuario usuarioActual; // Usuario que abre la ventana
+    private final Usuario usuarioActual;
 
     private JComboBox<Usuario> comboUsuarios;
     private JComboBox<Multimedia> comboRecursosDisponibles;
@@ -30,24 +30,10 @@ public class GestionPrestamosFrame extends JFrame {
         PrestamoDAO prestamoDAO = new PrestamoDAO(connection);
         this.prestamoService = new PrestamoService(prestamoDAO, multimediaService, usuarioService);
         this.usuarioActual = usuarioActual;
-        initUI(true, null);
-    }
 
-    public GestionPrestamosFrame(PrestamoService prestamoService, UsuarioService usuarioService,
-                                 MultimediaService multimediaService, Usuario usuarioActual) {
-        this.prestamoService = prestamoService;
-        this.usuarioService = usuarioService;
-        this.multimediaService = multimediaService;
-        this.usuarioActual = usuarioActual;
-        initUI(true, null);
-    }
-
-    public GestionPrestamosFrame(Usuario estudiante, PrestamoService prestamoService) {
-        this.usuarioService = null;
-        this.multimediaService = prestamoService.getMultimediaService();
-        this.prestamoService = prestamoService;
-        this.usuarioActual = estudiante;
-        initUI(false, estudiante);
+        // Verifica si el usuario es estudiante para definir el acceso
+        boolean esEstudiante = usuarioActual.getRol().equalsIgnoreCase("Estudiante");
+        initUI(!esEstudiante, esEstudiante ? usuarioActual : null);
     }
 
     private void initUI(boolean mostrarUsuarios, Usuario estudiante) {
@@ -79,14 +65,14 @@ public class GestionPrestamosFrame extends JFrame {
 
         if (mostrarUsuarios) {
             cargarUsuarios();
-            comboUsuarios.setEnabled(true);  // habilitado para admin/profesor
+            comboUsuarios.setEnabled(true);
             comboUsuarios.addActionListener(e -> {
                 Usuario seleccionado = (Usuario) comboUsuarios.getSelectedItem();
                 cargarRecursosPrestados(seleccionado);
             });
         } else {
             comboUsuarios.addItem(estudiante);
-            comboUsuarios.setEnabled(true); // estudiante no puede cambiar usuario
+            comboUsuarios.setEnabled(false); // estudiante no puede cambiar
             cargarRecursosPrestados(estudiante);
         }
 
@@ -151,10 +137,7 @@ public class GestionPrestamosFrame extends JFrame {
             if (comboUsuarios.getItemCount() > 0) {
                 comboUsuarios.setSelectedIndex(0);
                 Usuario primero = (Usuario) comboUsuarios.getSelectedItem();
-                System.out.println("Usuario seleccionado inicialmente: " + primero.getNombre());
                 cargarRecursosPrestados(primero);
-            } else {
-                System.out.println("⚠️ ComboUsuarios está vacío después de cargar.");
             }
 
         } catch (Exception e) {
@@ -162,7 +145,6 @@ public class GestionPrestamosFrame extends JFrame {
             e.printStackTrace();
         }
     }
-
 
     private void cargarRecursosDisponibles() {
         comboRecursosDisponibles.removeAllItems();

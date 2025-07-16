@@ -84,7 +84,7 @@ public class VerRecursosFrame extends JFrame {
             return;
         }
 
-        List<Multimedia> disponibles = multimediaService.listarRecursosDisponibles();
+        List<Multimedia> disponibles = multimediaService.listarRecursos();
 
         if (disponibles == null || disponibles.isEmpty()) {
             areaMensajes.setText("No hay recursos disponibles en este momento.");

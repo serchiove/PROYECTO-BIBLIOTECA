@@ -4,7 +4,7 @@ import com.biblioteca.servicios.MultimediaService;
 import com.biblioteca.servicios.PrestamoService;
 import com.biblioteca.servicios.UsuarioService;
 import com.biblioteca.usuarios.Usuario;
-import com.biblioteca.data.MultimediaDAO;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -68,7 +68,7 @@ public class MenuFrame extends JFrame {
                     () -> new GestionMultimediaFrame(usuario, multimediaService).setVisible(true)));
 
             panelBotones.add(crearBoton("Gestionar Préstamos", "icons/prestamo.png",
-                    () -> new GestionPrestamosFrame(usuario, prestamoService).setVisible(true)));
+                    () -> new GestionPrestamosFrame(connection, usuario).setVisible(true)));
 
             panelBotones.add(crearBoton("Ver Todos los Préstamos", "icons/todosprestamos.png",
                     () -> new VerTodosLosPrestamosFrame(
@@ -90,6 +90,10 @@ public class MenuFrame extends JFrame {
 
             panelBotones.add(crearBoton("Mis Recursos Interactivos", "icons/interactivos.png",
                     () -> new MisRecursosInteractivosFrame(usuario, prestamoService).setVisible(true)));
+
+            // NUEVO: botón para que el estudiante gestione sus préstamos
+            panelBotones.add(crearBoton("Gestionar mis Préstamos", "icons/prestamo.png",
+                    () -> new GestionPrestamosFrame(connection, usuario).setVisible(true)));
         }
 
         panelBotones.add(Box.createVerticalStrut(10));
@@ -102,10 +106,11 @@ public class MenuFrame extends JFrame {
         principal.add(panelBotones, BorderLayout.CENTER);
         add(principal);
     }
+
     private JButton crearBoton(String texto, String iconoRuta, Runnable accion) {
-        Color fondoBoton = new Color(240, 240, 240); // fondo claro
-        Color textoOscuro = new Color(30, 30, 30);   // texto oscuro
-        Color acento = new Color(80, 150, 255);      // color para borde o hover
+        Color fondoBoton = new Color(240, 240, 240);
+        Color textoOscuro = new Color(30, 30, 30);
+        Color acento = new Color(80, 150, 255);
 
         JButton btn = new JButton(texto, cargarIcono(iconoRuta));
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -123,12 +128,13 @@ public class MenuFrame extends JFrame {
         btn.setMaximumSize(new Dimension(400, 50));
         btn.addActionListener(e -> accion.run());
 
-        // Efecto hover opcional
+        // Efecto hover
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 btn.setBackground(acento);
                 btn.setForeground(Color.WHITE);
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btn.setBackground(fondoBoton);
                 btn.setForeground(textoOscuro);
@@ -137,7 +143,6 @@ public class MenuFrame extends JFrame {
 
         return btn;
     }
-
 
     private ImageIcon cargarIcono(String ruta) {
         try {

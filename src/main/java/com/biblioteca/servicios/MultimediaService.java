@@ -16,21 +16,11 @@ public class MultimediaService {
     }
 
     public List<Multimedia> listarRecursos() {
-        return multimediaDAO.obtenerTodosLosRecursos();
+        return multimediaDAO.obtenerTodosLosRecursos(); // ✅ con ID válidos
     }
 
     public Multimedia buscarPorId(String id) {
         return multimediaDAO.obtenerPorId(id);
-    }
-
-    public List<Multimedia> listarRecursosDisponibles() {
-        return multimediaDAO.obtenerRecursosDisponibles();
-    }
-
-    // NO expongas directamente el DAO, mejor encapsula aquí los métodos necesarios
-
-    public void agregarRecurso(Multimedia recurso) throws SQLException {
-        multimediaDAO.insertarRecurso(recurso);
     }
 
     public void actualizarRecurso(Multimedia recurso) {
@@ -39,6 +29,10 @@ public class MultimediaService {
 
     public void marcarComoDisponible(String id) {
         multimediaDAO.actualizarDisponibilidad(id, true);
+    }
+
+    public MultimediaDAO getMultimediaDAO() {
+        return multimediaDAO;
     }
 
     // Método para eliminar recurso que retorna boolean para saber si eliminó o no
@@ -51,7 +45,7 @@ public class MultimediaService {
         return true;
     }
 
-    public MultimediaDAO getMultimediaDAO() {
-        return null;
+    public void agregarRecurso(Multimedia recurso) {
+
     }
 }
