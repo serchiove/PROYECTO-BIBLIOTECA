@@ -7,22 +7,22 @@ public class Prestamo {
     private String idUsuario;
     private String idRecurso;
     private LocalDate fechaInicio;
-    private LocalDate fechaFin;
     private LocalDate fechaDevolucion;
-    private boolean devuelto;
+    private LocalDate fechaFin;
+    private String tipoRecurso;
 
-    // Constructor
-    public Prestamo(String id, String idUsuario, String idRecurso, LocalDate fechaInicio, LocalDate fechaFin) {
+    public Prestamo(String id, String idUsuario, String idRecurso,
+                    LocalDate fechaInicio, LocalDate fechaDevolucion,
+                    LocalDate fechaFin, String tipoRecurso) {
         this.id = id;
         this.idUsuario = idUsuario;
         this.idRecurso = idRecurso;
         this.fechaInicio = fechaInicio;
+        this.fechaDevolucion = fechaDevolucion;
         this.fechaFin = fechaFin;
-        this.devuelto = false;
-        this.fechaDevolucion = null;
+        this.tipoRecurso = tipoRecurso;
     }
 
-    // Getters
     public String getId() {
         return id;
     }
@@ -39,72 +39,48 @@ public class Prestamo {
         return fechaInicio;
     }
 
-    public LocalDate getFechaFin() {
-        return fechaFin;
-    }
-
-    public boolean isDevuelto() {
-        return devuelto;
-    }
-
     public LocalDate getFechaDevolucion() {
         return fechaDevolucion;
     }
 
-    // Setters
-    public void setId(String id) {
-        this.id = id;
+    public void setFechaDevolucion(LocalDate fechaDevolucion) {
+        this.fechaDevolucion = fechaDevolucion;
     }
 
-    public void setIdUsuario(String idUsuario) {
-        this.idUsuario = idUsuario;
-    }
-
-    public void setIdRecurso(String idRecurso) {
-        this.idRecurso = idRecurso;
-    }
-
-    public void setFechaInicio(LocalDate fechaInicio) {
-        this.fechaInicio = fechaInicio;
+    public LocalDate getFechaFin() {
+        return fechaFin;
     }
 
     public void setFechaFin(LocalDate fechaFin) {
         this.fechaFin = fechaFin;
     }
 
-    public void setDevuelto(boolean devuelto) {
-        this.devuelto = devuelto;
-        if (devuelto && this.fechaDevolucion == null) {
-            this.fechaDevolucion = LocalDate.now();
-        } else if (!devuelto) {
-            this.fechaDevolucion = null;
-        }
+    public String getTipoRecurso() {
+        return tipoRecurso;
     }
 
-    public void setFechaDevolucion(LocalDate fechaDevolucion) {
-        this.fechaDevolucion = fechaDevolucion;
-        this.devuelto = fechaDevolucion != null;
+    public void setTipoRecurso(String tipoRecurso) {
+        this.tipoRecurso = tipoRecurso;
     }
 
-    // Método lógico para marcar como devuelto
+    public boolean isDevuelto() {
+        return fechaDevolucion != null;
+    }
+
     public void marcarComoDevuelto() {
-        this.devuelto = true;
         this.fechaDevolucion = LocalDate.now();
     }
 
     @Override
     public String toString() {
-        return "Préstamo [ID: " + id +
-                ", Usuario: " + idUsuario +
-                ", Recurso: " + idRecurso +
-                ", Inicio: " + fechaInicio +
-                ", Fin: " + fechaFin +
-                (devuelto ? ", Devuelto: " + fechaDevolucion : ", En curso") +
-                "]";
+        return "Prestamo{" +
+                "id='" + id + '\'' +
+                ", idUsuario='" + idUsuario + '\'' +
+                ", idRecurso='" + idRecurso + '\'' +
+                ", fechaInicio=" + fechaInicio +
+                ", fechaDevolucion=" + fechaDevolucion +
+                ", fechaFin=" + fechaFin +
+                ", tipoRecurso='" + tipoRecurso + '\'' +
+                '}';
     }
-
-    public String getIdMultimedia() {
-        return idRecurso;
-    }
-
 }

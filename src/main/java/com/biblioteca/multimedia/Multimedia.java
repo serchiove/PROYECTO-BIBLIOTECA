@@ -9,12 +9,27 @@ public abstract class Multimedia implements Descargable, Reproducible, Visualiza
     protected String titulo;
     protected String autor;
     protected boolean disponible;
+    protected String tipoRecurso;  // nuevo campo para distinguir tipo
 
-    public Multimedia(String id, String titulo, String autor, boolean disponible) {
+    public Multimedia(String id, String titulo, String autor, boolean disponible, String tipoRecurso) {
         this.id = id;
         this.titulo = titulo;
         this.autor = autor;
         this.disponible = disponible;
+        this.tipoRecurso = tipoRecurso;
+    }
+
+    public Multimedia(String id, String titulo, String autor, boolean disponible) {
+        this(id, titulo, autor, disponible, "multimedia"); // Tipo por defecto si no se especifica
+    }
+
+    // Getter y setter para tipoRecurso
+    public String getTipoRecurso() {
+        return tipoRecurso;
+    }
+
+    public void setTipoRecurso(String tipoRecurso) {
+        this.tipoRecurso = tipoRecurso;
     }
 
     public String getId() {
@@ -24,6 +39,7 @@ public abstract class Multimedia implements Descargable, Reproducible, Visualiza
     public void setId(String id) {
         this.id = id;
     }
+
     public String getDescripcion() {
         return "Título: " + titulo + ", Autor: " + autor;
     }
@@ -31,8 +47,9 @@ public abstract class Multimedia implements Descargable, Reproducible, Visualiza
     public String getTitulo() {
         return titulo;
     }
+
     public String getNombre() {
-        return getTitulo(); // ya que 'titulo' representa el "nombre" del recurso
+        return getTitulo(); // 'titulo' representa el "nombre" del recurso
     }
 
     public void setTitulo(String titulo) {
@@ -74,6 +91,6 @@ public abstract class Multimedia implements Descargable, Reproducible, Visualiza
 
     @Override
     public String toString() {
-        return titulo + " (" + autor + ")";
+        return titulo + " (ID: " + id + ", Tipo: " + tipoRecurso + ")";
     }
 }

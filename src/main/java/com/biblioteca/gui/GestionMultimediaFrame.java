@@ -27,7 +27,6 @@ public class GestionMultimediaFrame extends JFrame {
         setLayout(new BorderLayout(15, 15));
 
         Color azulOscuro = new Color(30, 30, 60);
-        Color azulClaro = new Color(230, 240, 255);
         Color grisClaro = new Color(245, 245, 245);
         Color grisTexto = new Color(40, 40, 40);
 
@@ -46,17 +45,17 @@ public class GestionMultimediaFrame extends JFrame {
         JButton btnAgregar = crearBoton("➕ Agregar Recurso", azulOscuro);
         JButton btnBuscar = crearBoton("🔍 Buscar por ID", azulOscuro);
         JButton btnListar = crearBoton("📄 Listar Todo", azulOscuro);
-        JButton btnEliminar = crearBoton("🗑️ Eliminar Recurso", azulOscuro);  // Botón eliminar agregado
+        JButton btnEliminar = crearBoton("🗑️ Eliminar Recurso", azulOscuro);
 
         btnAgregar.addActionListener(e -> agregarRecurso());
         btnBuscar.addActionListener(e -> buscarPorId());
         btnListar.addActionListener(e -> listarRecursos());
-        btnEliminar.addActionListener(e -> eliminarRecurso()); // Listener para eliminar
+        btnEliminar.addActionListener(e -> eliminarRecurso());
 
         panelBotones.add(btnAgregar);
         panelBotones.add(btnBuscar);
         panelBotones.add(btnListar);
-        panelBotones.add(btnEliminar);  // Añadido al panel
+        panelBotones.add(btnEliminar);
 
         add(panelBotones, BorderLayout.CENTER);
 

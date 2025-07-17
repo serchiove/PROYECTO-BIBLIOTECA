@@ -21,11 +21,10 @@ public class UsuarioService {
         return this.usuarioDAO;
     }
 
-    // Crear usuario genérico según rol
     public boolean crearUsuario(String id, String nombre, String usuarioLogin, String contrasena, String rol) {
         try {
             if (usuarioDAO.obtenerPorId(id) != null) {
-                return false; // Ya existe un usuario con ese ID
+                return false;
             }
 
             Usuario nuevoUsuario;
@@ -40,7 +39,7 @@ public class UsuarioService {
                     nuevoUsuario = new Administrador(id, nombre, usuarioLogin, contrasena);
                     break;
                 default:
-                    return false; // Rol inválido
+                    return false;
             }
 
             return usuarioDAO.agregar(nuevoUsuario);
@@ -51,7 +50,6 @@ public class UsuarioService {
         }
     }
 
-    // Autenticación del usuario
     public Usuario autenticar(String usuarioLogin, String contrasena) {
         try {
             List<Usuario> usuarios = usuarioDAO.listar();
@@ -75,17 +73,14 @@ public class UsuarioService {
         return usuarioActivo;
     }
 
-    // Registrar estudiante
     public boolean registrarEstudiante(String id, String nombre, String usuario, String contrasena) {
         return crearUsuario(id, nombre, usuario, contrasena, "ESTUDIANTE");
     }
 
-    // Registrar profesor
     public boolean registrarProfesor(String id, String nombre, String usuario, String contrasena) {
         return crearUsuario(id, nombre, usuario, contrasena, "PROFESOR");
     }
 
-    // Listar todos los usuarios (con debug)
     public List<Usuario> listarUsuarios() {
         try {
             return usuarioDAO.listar();
@@ -95,9 +90,6 @@ public class UsuarioService {
         }
     }
 
-
-
-    // Buscar por ID
     public Usuario buscarUsuarioPorId(String id) {
         try {
             return usuarioDAO.obtenerPorId(id);
@@ -107,7 +99,6 @@ public class UsuarioService {
         }
     }
 
-    // Eliminar usuario
     public boolean eliminarUsuario(String id) {
         try {
             return usuarioDAO.eliminar(id);

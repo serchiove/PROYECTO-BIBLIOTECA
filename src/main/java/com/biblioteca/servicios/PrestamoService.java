@@ -1,195 +1,172 @@
 package com.biblioteca.servicios;
 
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import com.biblioteca.data.Prestamo;
 import com.biblioteca.data.PrestamoDAO;
+import com.biblioteca.data.PrestamoRecursoTecnologicoDAO;
 import com.biblioteca.multimedia.Multimedia;
+import com.biblioteca.recurso.RecursoTecnologico;
 import com.biblioteca.usuarios.Usuario;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
 public class PrestamoService {
+
     private final PrestamoDAO prestamoDAO;
+    private final PrestamoRecursoTecnologicoDAO prestamoRecTecDAO;
     private final MultimediaService multimediaService;
+    private final RecursoTecnologicoService recursoTecnologicoService;
     private final UsuarioService usuarioService;
 
-    public PrestamoService(PrestamoDAO prestamoDAO, MultimediaService multimediaService, UsuarioService usuarioService) {
+    public PrestamoService(PrestamoDAO prestamoDAO,
+                           PrestamoRecursoTecnologicoDAO prestamoRecTecDAO,
+                           MultimediaService multimediaService,
+                           RecursoTecnologicoService recursoTecnologicoService,
+                           UsuarioService usuarioService) {
         this.prestamoDAO = prestamoDAO;
+        this.prestamoRecTecDAO = prestamoRecTecDAO;
         this.multimediaService = multimediaService;
+        this.recursoTecnologicoService = recursoTecnologicoService;
         this.usuarioService = usuarioService;
     }
 
-    public boolean registrarPrestamo(String idUsuario, String idRecurso) {
-        try {
-            Usuario usuario = usuarioService.buscarUsuarioPorId(idUsuario);
-            Multimedia recurso = multimediaService.buscarPorId(idRecurso);
+    public boolean registrarPrestamo(String idUsuario, String idRecurso, String tipoRecurso) throws SQLException {
+        if (idUsuario == null || idUsuario.isEmpty() || idRecurso == null || idRecurso.isEmpty()) {
+            System.err.println("ID Usuario o Recurso inválido para registrar préstamo");
+            return false;
+        }
 
-            if (usuario == null || recurso == null || !recurso.isDisponible()) {
+        Usuario usuario = usuarioService.buscarUsuarioPorId(idUsuario);
+        if (usuario == null) {
+            System.err.println("Usuario no encontrado");
+            return false;
+        }
+
+        String idPrestamo = UUID.randomUUID().toString();
+        LocalDate fechaInicio = LocalDate.now();
+
+        if ("Multimedia".equalsIgnoreCase(tipoRecurso)) {
+            Multimedia recurso = multimediaService.buscarPorId(idRecurso);
+            if (recurso == null || !recurso.isDisponible()) {
+                System.err.println("Recurso multimedia no válido o no disponible");
+                return false;
+            }
+            if (prestamoDAO.existenPrestamosParaRecurso(idRecurso)) {
+                System.err.println("El recurso multimedia ya está prestado");
                 return false;
             }
 
-            List<Prestamo> prestamos = prestamoDAO.cargarPrestamos();
-            for (Prestamo p : prestamos) {
-                if (p.getIdUsuario().equals(idUsuario) &&
-                        p.getIdRecurso().equals(idRecurso) &&
-                        !p.isDevuelto()) {
-                    return false; // Ya tiene este recurso sin devolver
-                }
-            }
-
-            String idPrestamo = UUID.randomUUID().toString();
-            LocalDate fechaInicio = LocalDate.now();
-            LocalDate fechaFin = fechaInicio.plusDays(7); // Préstamo por 7 días
-
-            Prestamo nuevo = new Prestamo(idPrestamo, idUsuario, idRecurso, fechaInicio, fechaFin);
-            prestamos.add(nuevo);
-
-            prestamoDAO.guardarPrestamos(prestamos);
+            boolean registrado = prestamoDAO.registrarPrestamo(idPrestamo, idUsuario, idRecurso, fechaInicio, tipoRecurso);
+            if (!registrado) return false;
 
             recurso.setDisponible(false);
             multimediaService.actualizarRecurso(recurso);
 
+            System.out.println("Préstamo multimedia registrado con id: " + idPrestamo);
             return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+        } else if ("Tecnologico".equalsIgnoreCase(tipoRecurso)) {
+            RecursoTecnologico recursoTec = recursoTecnologicoService.buscarPorId(idRecurso);
+            if (recursoTec == null || !"Disponible".equalsIgnoreCase(recursoTec.getEstado())) {
+                System.err.println("Recurso tecnológico no válido o no disponible");
+                return false;
+            }
+            if (prestamoRecTecDAO.existenPrestamosParaRecurso(idRecurso)) {
+                System.err.println("El recurso tecnológico ya está prestado");
+                return false;
+            }
+
+            boolean registrado = prestamoRecTecDAO.registrarPrestamo(idPrestamo, idUsuario, idRecurso, fechaInicio, tipoRecurso);
+            if (!registrado) return false;
+
+            recursoTec.setEstado("Reservado");
+            recursoTecnologicoService.actualizarRecursoTecnologico(recursoTec);
+
+            System.out.println("Préstamo tecnológico registrado con id: " + idPrestamo);
+            return true;
+
+        } else {
+            System.err.println("Tipo de recurso desconocido: " + tipoRecurso);
             return false;
         }
     }
 
-    public List<Multimedia> listarRecursosPrestadosPorUsuario(String usuarioId) {
-        List<Multimedia> recursosPrestados = new ArrayList<>();
+    public boolean registrarDevolucion(String idPrestamo, String tipoRecurso) throws SQLException {
+        LocalDate fechaDevolucion = LocalDate.now();
 
-        try {
-            List<Prestamo> prestamos = prestamoDAO.cargarPrestamos();
-            for (Prestamo prestamo : prestamos) {
-                if (prestamo.getIdUsuario().equals(usuarioId) && prestamo.getFechaDevolucion() == null) {
-                    Multimedia recurso = multimediaService.buscarPorId(prestamo.getIdRecurso());
-                    if (recurso != null) {
-                        recursosPrestados.add(recurso);
-                    }
+        if ("Multimedia".equalsIgnoreCase(tipoRecurso)) {
+            boolean ok = prestamoDAO.registrarDevolucion(idPrestamo, fechaDevolucion);
+            if (!ok) return false;
+
+            Prestamo p = prestamoDAO.cargarPrestamos().stream()
+                    .filter(prest -> prest.getId().equals(idPrestamo))
+                    .findFirst().orElse(null);
+
+            if (p != null) {
+                Multimedia recurso = multimediaService.buscarPorId(p.getIdRecurso());
+                if (recurso != null) {
+                    recurso.setDisponible(true);
+                    multimediaService.actualizarRecurso(recurso);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            System.out.println("Devolución multimedia registrada para préstamo: " + idPrestamo);
+            return true;
 
-        return recursosPrestados;
-    }
+        } else if ("Tecnologico".equalsIgnoreCase(tipoRecurso)) {
+            boolean ok = prestamoRecTecDAO.registrarDevolucion(idPrestamo, fechaDevolucion);
+            if (!ok) return false;
 
-    public boolean registrarDevolucion(String idUsuario, String idRecurso) {
-        try {
-            List<Prestamo> prestamos = prestamoDAO.cargarPrestamos();
-            boolean encontrado = false;
+            Prestamo p = prestamoRecTecDAO.cargarPrestamos().stream()
+                    .filter(prest -> prest.getId().equals(idPrestamo))
+                    .findFirst().orElse(null);
 
-            for (Prestamo p : prestamos) {
-                if (p.getIdUsuario().equals(idUsuario) &&
-                        p.getIdRecurso().equals(idRecurso) &&
-                        !p.isDevuelto()) {
-
-                    p.marcarComoDevuelto(); // Marca como devuelto y asigna fecha
-                    multimediaService.marcarComoDisponible(idRecurso);
-                    encontrado = true;
-                    break;
+            if (p != null) {
+                RecursoTecnologico recursoTec = recursoTecnologicoService.buscarPorId(p.getIdRecurso());
+                if (recursoTec != null) {
+                    recursoTec.setEstado("Disponible");
+                    recursoTecnologicoService.actualizarRecursoTecnologico(recursoTec);
                 }
             }
+            System.out.println("Devolución tecnológica registrada para préstamo: " + idPrestamo);
+            return true;
 
-            if (encontrado) {
-                prestamoDAO.guardarPrestamos(prestamos);
-            }
-
-            return encontrado;
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } else {
+            System.err.println("Tipo de recurso desconocido para devolución: " + tipoRecurso);
             return false;
         }
     }
 
-    public List<Prestamo> listarPrestamos() {
+    public List<Prestamo> listarPrestamos(String tipoRecurso) {
         try {
-            return prestamoDAO.cargarPrestamos();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
-    }
-
-    public List<Prestamo> prestamosPorUsuario(String idUsuario) {
-        try {
-            List<Prestamo> todos = prestamoDAO.cargarPrestamos();
-            List<Prestamo> resultado = new ArrayList<>();
-
-            for (Prestamo p : todos) {
-                if (p.getIdUsuario().equals(idUsuario)) {
-                    resultado.add(p);
-                }
+            if ("Multimedia".equalsIgnoreCase(tipoRecurso)) {
+                return prestamoDAO.cargarPrestamos();
+            } else if ("Tecnologico".equalsIgnoreCase(tipoRecurso)) {
+                return prestamoRecTecDAO.cargarPrestamos();
+            } else {
+                System.err.println("Tipo de recurso desconocido para listar préstamos: " + tipoRecurso);
+                return List.of();
             }
-
-            return resultado;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            return new ArrayList<>();
+            return List.of();
         }
     }
 
-    public List<Prestamo> listarPrestamosActivos() {
-        return listarPrestamos().stream()
-                .filter(p -> p.getFechaDevolucion() == null)
-                .collect(Collectors.toList());
-    }
-
-    public List<Multimedia> obtenerRecursosReservadosPorUsuario(String idUsuario) {
-        List<Multimedia> reservados = new ArrayList<>();
-
+    public List<Prestamo> listarPrestamosPorUsuario(String idUsuario, String tipoRecurso) {
         try {
-            for (Prestamo p : prestamoDAO.cargarPrestamos()) {
-                if (p.getIdUsuario().equals(idUsuario) && !p.isDevuelto()) {
-                    Multimedia recurso = multimediaService.buscarPorId(p.getIdRecurso());
-                    if (recurso != null) {
-                        reservados.add(recurso);
-                    }
-                }
+            if ("Multimedia".equalsIgnoreCase(tipoRecurso)) {
+                return prestamoDAO.obtenerPrestamosPorUsuario(idUsuario);
+            } else if ("Tecnologico".equalsIgnoreCase(tipoRecurso)) {
+                return prestamoRecTecDAO.obtenerPrestamosPorUsuario(idUsuario);
+            } else {
+                System.err.println("Tipo de recurso desconocido para listar préstamos por usuario: " + tipoRecurso);
+                return List.of();
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        }
-
-        return reservados;
-    }
-
-    public List<Prestamo> listarPrestamosPorUsuario(String nombreUsuario) {
-        List<Prestamo> prestamosUsuario = new ArrayList<>();
-        try {
-            for (Prestamo p : prestamoDAO.cargarPrestamos()) {
-                Usuario usuario = usuarioService.buscarUsuarioPorId(p.getIdUsuario());
-                if (usuario != null && usuario.getUsuario().equals(nombreUsuario)) {
-                    prestamosUsuario.add(p);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return prestamosUsuario;
-    }
-    // PrestamoService.java
-    public List<Prestamo> obtenerPrestamosDeUsuario(String idUsuario) {
-        try {
-            return prestamoDAO.obtenerPrestamosPorUsuario(idUsuario);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            return List.of();
         }
     }
-
-    public MultimediaService getMultimediaService() {
-        return multimediaService;
-    }
-
-    public Multimedia buscarRecursoPorId(String id) {
-        return multimediaService != null ? multimediaService.buscarPorId(id) : null;
-    }
-
 }

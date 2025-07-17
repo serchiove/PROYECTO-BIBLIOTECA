@@ -1,7 +1,9 @@
 package com.biblioteca.gui;
 
+import com.biblioteca.data.RecursoTecnologicoDAO;
 import com.biblioteca.servicios.MultimediaService;
 import com.biblioteca.servicios.PrestamoService;
+import com.biblioteca.servicios.RecursoTecnologicoService; // Importa el servicio
 import com.biblioteca.servicios.UsuarioService;
 import com.biblioteca.usuarios.Usuario;
 
@@ -21,6 +23,9 @@ public class MenuFrame extends JFrame {
     private final UsuarioService usuarioService;
     private final Connection connection;
 
+    // Añadimos servicio de recursos tecnológicos
+    private final RecursoTecnologicoService recursoTecnologicoService;
+
     public MenuFrame(Usuario usuario, PrestamoService prestamoService,
                      MultimediaService multimediaService, UsuarioService usuarioService,
                      Connection connection) {
@@ -29,6 +34,10 @@ public class MenuFrame extends JFrame {
         this.multimediaService = multimediaService;
         this.usuarioService = usuarioService;
         this.connection = connection;
+
+        // Crear DAO con conexión y pasar al Service
+        RecursoTecnologicoDAO recursoTecnologicoDAO = new RecursoTecnologicoDAO(connection);
+        this.recursoTecnologicoService = new RecursoTecnologicoService(recursoTecnologicoDAO);
 
         setTitle("Sistema de Biblioteca Virtual - UTP");
         setSize(750, 580);
@@ -79,6 +88,10 @@ public class MenuFrame extends JFrame {
 
             panelBotones.add(crearBoton("Gestión de Usuarios", "icons/usuarios.png",
                     () -> new GestionUsuariosFrame(usuarioService).setVisible(true)));
+
+            // --- NUEVO BOTÓN PARA RECURSOS TECNOLÓGICOS ---
+            panelBotones.add(crearBoton("Gestión de Recursos Tecnológicos", "icons/recursos_tecnologicos.png",
+                    () -> new GestionRecursosTecnologicosFrame(connection).setVisible(true)));
         }
 
         if (rol.equals("ESTUDIANTE")) {

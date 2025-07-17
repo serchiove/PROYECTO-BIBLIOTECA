@@ -1,7 +1,5 @@
 package com.biblioteca.gui;
 
-import com.biblioteca.data.Prestamo;
-import com.biblioteca.data.PrestamoDAO;
 import com.biblioteca.multimedia.Multimedia;
 import com.biblioteca.servicios.MultimediaService;
 import com.biblioteca.servicios.PrestamoService;
@@ -27,11 +25,9 @@ public class GestionPrestamosFrame extends JFrame {
     public GestionPrestamosFrame(Connection connection, Usuario usuarioActual) {
         this.usuarioService = new UsuarioService(connection);
         this.multimediaService = new MultimediaService(connection);
-        PrestamoDAO prestamoDAO = new PrestamoDAO(connection);
-        this.prestamoService = new PrestamoService(prestamoDAO, multimediaService, usuarioService);
+        this.prestamoService = new PrestamoService(connection, multimediaService, usuarioService); // Si tienes constructor con Connection
         this.usuarioActual = usuarioActual;
 
-        // Verifica si el usuario es estudiante para definir el acceso
         boolean esEstudiante = usuarioActual.getRol().equalsIgnoreCase("Estudiante");
         initUI(!esEstudiante, esEstudiante ? usuarioActual : null);
     }
@@ -44,9 +40,9 @@ public class GestionPrestamosFrame extends JFrame {
         getContentPane().setBackground(grisClaro);
 
         setTitle("Gestión de Préstamos");
-        setSize(600, 300);
+        setSize(600, 320);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10, 10));
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         JLabel encabezado = new JLabel("📦 Gestión de Préstamos", SwingConstants.CENTER);
@@ -55,7 +51,7 @@ public class GestionPrestamosFrame extends JFrame {
         encabezado.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         add(encabezado, BorderLayout.NORTH);
 
-        JPanel panelFormulario = new JPanel(new GridLayout(4, 2, 10, 10));
+        JPanel panelFormulario = new JPanel(new GridLayout(3, 2, 10, 10));
         panelFormulario.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         panelFormulario.setBackground(grisClaro);
 
@@ -72,87 +68,74 @@ public class GestionPrestamosFrame extends JFrame {
             });
         } else {
             comboUsuarios.addItem(estudiante);
-            comboUsuarios.setEnabled(false); // estudiante no puede cambiar
+            comboUsuarios.setEnabled(false);
             cargarRecursosPrestados(estudiante);
         }
 
         cargarRecursosDisponibles();
 
-        JLabel lblUsuario = new JLabel("Usuario:");
-        lblUsuario.setForeground(textoOscuro);
-        panelFormulario.add(lblUsuario);
+        panelFormulario.add(new JLabel("Usuario:"));
         panelFormulario.add(comboUsuarios);
 
-        JLabel lblDisponible = new JLabel("Recurso disponible:");
-        lblDisponible.setForeground(textoOscuro);
-        panelFormulario.add(lblDisponible);
+        panelFormulario.add(new JLabel("Recurso multimedia disponible:"));
         panelFormulario.add(comboRecursosDisponibles);
 
-        JLabel lblPrestado = new JLabel("Recurso prestado:");
-        lblPrestado.setForeground(textoOscuro);
-        panelFormulario.add(lblPrestado);
+        panelFormulario.add(new JLabel("Recurso multimedia prestado:"));
         panelFormulario.add(comboRecursosPrestados);
+
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        panelBotones.setBackground(grisClaro);
 
         JButton btnPrestar = new JButton("Registrar préstamo");
         btnPrestar.setBackground(grisOscuro);
         btnPrestar.setForeground(Color.WHITE);
-        btnPrestar.setFocusPainted(false);
+        btnPrestar.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btnPrestar.addActionListener(e -> registrarPrestamo());
 
         JButton btnDevolver = new JButton("Registrar devolución");
-        btnDevolver.setBackground(grisOscuro);
+        btnDevolver.setBackground(new Color(0, 120, 215));
         btnDevolver.setForeground(Color.WHITE);
-        btnDevolver.setFocusPainted(false);
+        btnDevolver.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btnDevolver.addActionListener(e -> registrarDevolucion());
 
-        panelFormulario.add(btnPrestar);
-        panelFormulario.add(btnDevolver);
+        panelBotones.add(btnPrestar);
+        panelBotones.add(btnDevolver);
 
         add(panelFormulario, BorderLayout.CENTER);
+        add(panelBotones, BorderLayout.SOUTH);
+
         setVisible(true);
     }
 
     private void cargarUsuarios() {
         comboUsuarios.removeAllItems();
-
-        if (usuarioService == null) {
-            System.out.println("⚠️ usuarioService es null, no se puede cargar usuarios.");
-            return;
-        }
-
         try {
             List<Usuario> usuarios = usuarioService.listarUsuarios();
-            System.out.println("Usuarios obtenidos: " + usuarios.size());
-
-            if (usuarios.isEmpty()) {
-                System.out.println("⚠️ No hay usuarios en la base de datos.");
-                return;
-            }
-
             for (Usuario u : usuarios) {
-                System.out.println("Agregando usuario: " + u.getNombre() + " - Rol: " + u.getRol());
                 comboUsuarios.addItem(u);
             }
 
             if (comboUsuarios.getItemCount() > 0) {
-                comboUsuarios.setSelectedIndex(0);
                 Usuario primero = (Usuario) comboUsuarios.getSelectedItem();
                 cargarRecursosPrestados(primero);
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Error cargando usuarios: " + e.getMessage());
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error cargando usuarios: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void cargarRecursosDisponibles() {
         comboRecursosDisponibles.removeAllItems();
-        List<Multimedia> recursos = multimediaService.listarRecursos();
-        for (Multimedia recurso : recursos) {
-            if (recurso.isDisponible()) {
-                comboRecursosDisponibles.addItem(recurso);
+        try {
+            List<Multimedia> disponibles = prestamoService.listarRecursosDisponibles();
+            for (Multimedia r : disponibles) {
+                comboRecursosDisponibles.addItem(r);
             }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error cargando recursos disponibles: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -160,14 +143,14 @@ public class GestionPrestamosFrame extends JFrame {
         comboRecursosPrestados.removeAllItems();
         if (usuario == null) return;
 
-        List<Prestamo> prestamos = prestamoService.prestamosPorUsuario(usuario.getId());
-        for (Prestamo p : prestamos) {
-            if (!p.isDevuelto()) {
-                Multimedia recurso = multimediaService.buscarPorId(p.getIdRecurso());
-                if (recurso != null) {
-                    comboRecursosPrestados.addItem(recurso);
-                }
+        try {
+            List<Multimedia> prestados = prestamoService.listarRecursosPrestadosPorUsuario(usuario.getId());
+            for (Multimedia recurso : prestados) {
+                comboRecursosPrestados.addItem(recurso);
             }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error cargando recursos prestados: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -175,22 +158,20 @@ public class GestionPrestamosFrame extends JFrame {
         Usuario usuario = (Usuario) comboUsuarios.getSelectedItem();
         Multimedia recurso = (Multimedia) comboRecursosDisponibles.getSelectedItem();
 
-        if (usuario == null) {
-            JOptionPane.showMessageDialog(this, "Seleccione un usuario.");
-            return;
-        }
-        if (recurso == null) {
-            JOptionPane.showMessageDialog(this, "Seleccione un recurso disponible.");
+        if (usuario == null || recurso == null) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un usuario y un recurso multimedia.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         boolean ok = prestamoService.registrarPrestamo(usuario.getId(), recurso.getId());
         if (ok) {
-            JOptionPane.showMessageDialog(this, "✅ Préstamo registrado exitosamente.");
+            JOptionPane.showMessageDialog(this, "✅ Préstamo registrado correctamente.");
             cargarRecursosDisponibles();
             cargarRecursosPrestados(usuario);
         } else {
-            JOptionPane.showMessageDialog(this, "❌ No se pudo registrar el préstamo.");
+            JOptionPane.showMessageDialog(this, "❌ No se pudo registrar el préstamo.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -198,22 +179,20 @@ public class GestionPrestamosFrame extends JFrame {
         Usuario usuario = (Usuario) comboUsuarios.getSelectedItem();
         Multimedia recurso = (Multimedia) comboRecursosPrestados.getSelectedItem();
 
-        if (usuario == null) {
-            JOptionPane.showMessageDialog(this, "Seleccione un usuario.");
-            return;
-        }
-        if (recurso == null) {
-            JOptionPane.showMessageDialog(this, "Seleccione un recurso prestado.");
+        if (usuario == null || recurso == null) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un usuario y un recurso prestado.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         boolean ok = prestamoService.registrarDevolucion(usuario.getId(), recurso.getId());
         if (ok) {
-            JOptionPane.showMessageDialog(this, "✅ Devolución registrada exitosamente.");
+            JOptionPane.showMessageDialog(this, "✅ Devolución registrada correctamente.");
             cargarRecursosDisponibles();
             cargarRecursosPrestados(usuario);
         } else {
-            JOptionPane.showMessageDialog(this, "❌ No se pudo registrar la devolución.");
+            JOptionPane.showMessageDialog(this, "❌ No se pudo registrar la devolución.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

@@ -4,11 +4,9 @@ import com.biblioteca.data.MultimediaDAO;
 import com.biblioteca.multimedia.Multimedia;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 public class MultimediaService {
-
     private final MultimediaDAO multimediaDAO;
 
     public MultimediaService(Connection conexion) {
@@ -16,7 +14,11 @@ public class MultimediaService {
     }
 
     public List<Multimedia> listarRecursos() {
-        return multimediaDAO.obtenerTodosLosRecursos(); // ✅ con ID válidos
+        return multimediaDAO.obtenerTodosLosRecursos();
+    }
+
+    public List<Multimedia> listarRecursosDisponibles() {
+        return multimediaDAO.obtenerRecursosDisponibles();
     }
 
     public Multimedia buscarPorId(String id) {
@@ -31,21 +33,21 @@ public class MultimediaService {
         multimediaDAO.actualizarDisponibilidad(id, true);
     }
 
-    public MultimediaDAO getMultimediaDAO() {
-        return multimediaDAO;
-    }
-
-    // Método para eliminar recurso que retorna boolean para saber si eliminó o no
     public boolean eliminarRecursoPorId(String id) {
         Multimedia existente = multimediaDAO.obtenerPorId(id);
         if (existente == null) {
-            return false; // No existe recurso con ese ID
+            return false;
         }
         multimediaDAO.eliminarRecurso(id);
         return true;
     }
 
     public void agregarRecurso(Multimedia recurso) {
+        multimediaDAO.insertarRecurso(recurso);
+    }
 
+    // Método para marcar como NO disponible
+    public void marcarComoNoDisponible(String id) {
+        multimediaDAO.actualizarDisponibilidad(id, false);
     }
 }
