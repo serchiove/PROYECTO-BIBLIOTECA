@@ -1,9 +1,12 @@
 package com.biblioteca.gui;
 
 import com.biblioteca.data.PrestamoDAO;
+import com.biblioteca.data.PrestamoRecursoTecnologicoDAO;
+import com.biblioteca.data.RecursoTecnologicoDAO;
 import com.biblioteca.servicios.AutenticacionService;
 import com.biblioteca.servicios.MultimediaService;
 import com.biblioteca.servicios.PrestamoService;
+import com.biblioteca.servicios.RecursoTecnologicoService;
 import com.biblioteca.servicios.UsuarioService;
 import com.biblioteca.usuarios.Usuario;
 
@@ -32,7 +35,19 @@ public class LoginFrame extends JFrame {
     private void inicializarServicios() {
         this.usuarioService = new UsuarioService(connection);
         this.multimediaService = new MultimediaService(connection);
-        this.prestamoService = new PrestamoService(new PrestamoDAO(connection), multimediaService, usuarioService);
+        // Crear DAOs y servicios necesarios para el constructor de PrestamoService:
+        PrestamoDAO prestamoDAO = new PrestamoDAO(connection);
+        PrestamoRecursoTecnologicoDAO prestamoRecTecDAO = new PrestamoRecursoTecnologicoDAO(connection);
+        RecursoTecnologicoService recursoTecnologicoService = new RecursoTecnologicoService(new RecursoTecnologicoDAO(connection));
+
+        this.prestamoService = new PrestamoService(
+                prestamoDAO,
+                prestamoRecTecDAO,
+                multimediaService,
+                recursoTecnologicoService,
+                usuarioService
+        );
+
         this.authService = new AutenticacionService(connection);
     }
 

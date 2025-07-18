@@ -39,14 +39,13 @@ public class UsuarioDAO {
         return usuarios;
     }
 
-
     public boolean agregar(Usuario usuario) throws SQLException {
         String sql = "INSERT INTO usuarios (id, nombre, usuario, contrasena, rol) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, usuario.getId());
             ps.setString(2, usuario.getNombre());
             ps.setString(3, usuario.getUsuario());
-            ps.setString(4, usuario.getPassword());
+            ps.setString(4, usuario.getPassword()); // getPassword() devuelve contrasena
             ps.setString(5, usuario.getRol());
             return ps.executeUpdate() > 0;
         }
@@ -56,8 +55,7 @@ public class UsuarioDAO {
         String sql = "DELETE FROM usuarios WHERE id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, id);
-            int filasAfectadas = ps.executeUpdate();
-            return filasAfectadas > 0;
+            return ps.executeUpdate() > 0;
         }
     }
 
@@ -74,6 +72,7 @@ public class UsuarioDAO {
             case "PROFESOR":
                 return new Profesor(id, nombre, usuario, password);
             case "ADMIN":
+            case "ADMINISTRADOR":
                 return new Administrador(id, nombre, usuario, password);
             default:
                 throw new SQLException("Rol desconocido: " + rol);

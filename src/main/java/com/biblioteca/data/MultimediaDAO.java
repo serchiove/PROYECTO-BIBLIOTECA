@@ -14,7 +14,6 @@ public class MultimediaDAO {
         this.conexion = conexion;
     }
 
-    // Obtiene solo recursos disponibles
     public List<Multimedia> obtenerRecursosDisponibles() {
         List<Multimedia> disponibles = new ArrayList<>();
         String sql = "SELECT * FROM multimedia WHERE disponible = true";
@@ -36,7 +35,6 @@ public class MultimediaDAO {
         return disponibles;
     }
 
-    // Crea un objeto Multimedia concreto según el tipo desde ResultSet
     private Multimedia crearMultimediaDesdeResultSet(ResultSet rs) throws SQLException {
         String tipo = rs.getString("tipo");
         if (tipo == null) {
@@ -83,8 +81,7 @@ public class MultimediaDAO {
         };
     }
 
-    // Inserta un nuevo recurso multimedia en la BD
-    public void insertarRecurso(Multimedia recurso) {
+    public boolean insertarRecurso(Multimedia recurso) {
         String sql = "INSERT INTO multimedia (id, titulo, autor, disponible, tipo, isbn, tamanoMB, duracionSegundos, " +
                 "duracionMinutos, region, tema, numeroDiapositivas, numero, universidad) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -96,7 +93,8 @@ public class MultimediaDAO {
             stmt.setBoolean(4, recurso.isDisponible());
 
             stmt.setString(5, recurso.getClass().getSimpleName());
-            // Inicializar todos los campos en null para evitar valores incorrectos
+
+            // Inicializar campos nulos para evitar valores erróneos
             stmt.setNull(6, Types.VARCHAR);
             stmt.setNull(7, Types.INTEGER);
             stmt.setNull(8, Types.INTEGER);
@@ -126,15 +124,15 @@ public class MultimediaDAO {
                 stmt.setString(14, t.getUniversidad());
             }
 
-            stmt.executeUpdate();
-            System.out.println("✅ Recurso multimedia insertado correctamente.");
+            int filas = stmt.executeUpdate();
+            return filas > 0;
         } catch (SQLException e) {
             System.err.println("❌ Error al insertar recurso multimedia: " + e.getMessage());
+            return false;
         }
     }
 
-    // Actualiza título, autor y disponibilidad de un recurso existente
-    public void actualizar(Multimedia recurso) {
+    public boolean actualizar(Multimedia recurso) {
         String sql = "UPDATE multimedia SET titulo = ?, autor = ?, disponible = ? WHERE id = ?";
 
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
@@ -142,28 +140,29 @@ public class MultimediaDAO {
             stmt.setString(2, recurso.getAutor());
             stmt.setBoolean(3, recurso.isDisponible());
             stmt.setString(4, recurso.getId());
-            stmt.executeUpdate();
-            System.out.println("✅ Recurso multimedia actualizado correctamente.");
+            int filas = stmt.executeUpdate();
+            return filas > 0;
         } catch (SQLException e) {
             System.err.println("❌ Error al actualizar recurso multimedia: " + e.getMessage());
+            return false;
         }
     }
 
-    // Actualiza solo la disponibilidad de un recurso
-    public void actualizarDisponibilidad(String id, boolean disponible) {
+
+    public boolean actualizarDisponibilidad(String id, boolean disponible) {
         String sql = "UPDATE multimedia SET disponible = ? WHERE id = ?";
 
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
             stmt.setBoolean(1, disponible);
             stmt.setString(2, id);
-            stmt.executeUpdate();
-            System.out.println("✅ Disponibilidad actualizada.");
+            int filas = stmt.executeUpdate();
+            return filas > 0;
         } catch (SQLException e) {
             System.err.println("❌ Error al actualizar disponibilidad: " + e.getMessage());
+            return false;
         }
     }
 
-    // Obtiene todos los recursos multimedia sin filtro
     public List<Multimedia> obtenerTodosLosRecursos() {
         List<Multimedia> recursos = new ArrayList<>();
         String sql = "SELECT * FROM multimedia";
@@ -183,7 +182,6 @@ public class MultimediaDAO {
         return recursos;
     }
 
-    // Obtiene un recurso por su ID
     public Multimedia obtenerPorId(String id) {
         String sql = "SELECT * FROM multimedia WHERE id = ?";
 
@@ -201,20 +199,13 @@ public class MultimediaDAO {
         return null;
     }
 
-    // Elimina un recurso por su ID, retorna true si se eliminó
     public boolean eliminarRecurso(String id) {
         String sql = "DELETE FROM multimedia WHERE id = ?";
 
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
             stmt.setString(1, id);
             int filasAfectadas = stmt.executeUpdate();
-            if (filasAfectadas > 0) {
-                System.out.println("✅ Recurso eliminado correctamente.");
-                return true;
-            } else {
-                System.out.println("⚠️ No se encontró recurso con id=" + id);
-                return false;
-            }
+            return filasAfectadas > 0;
         } catch (SQLException e) {
             System.err.println("❌ Error al eliminar recurso: " + e.getMessage());
             return false;

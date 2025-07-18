@@ -13,6 +13,7 @@ public class PrestamoDAO {
         this.conexion = conexion;
     }
 
+    // 🔄 Carga todos los préstamos existentes desde la base de datos
     public List<Prestamo> cargarPrestamos() throws SQLException {
         List<Prestamo> prestamos = new ArrayList<>();
         String sql = "SELECT * FROM prestamos";
@@ -21,27 +22,20 @@ public class PrestamoDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                LocalDate fechaFin = rs.getDate("fecha_fin") != null ? rs.getDate("fecha_fin").toLocalDate() : null;
-
-                Prestamo p = new Prestamo(
-                        rs.getString("id"),
-                        rs.getString("id_usuario"),
-                        rs.getString("id_recurso"),
-                        rs.getDate("fecha_prestamo").toLocalDate(),
-                        rs.getDate("fecha_devolucion") != null ? rs.getDate("fecha_devolucion").toLocalDate() : null,
-                        fechaFin,
-                        rs.getString("tipo_recurso")
-                );
-
-                prestamos.add(p);
+                prestamos.add(mapearPrestamo(rs));
             }
         }
         return prestamos;
     }
 
+    // 💾 Guarda la lista completa de préstamos, borrando los anteriores
     public void guardarPrestamos(List<Prestamo> prestamos) throws SQLException {
         String deleteSql = "DELETE FROM prestamos";
-        String insertSql = "INSERT INTO prestamos (id, id_usuario, id_recurso, fecha_prestamo, fecha_devolucion, fecha_fin, tipo_recurso) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertSql = """
+            INSERT INTO prestamos 
+            (id, id_usuario, id_recurso, fecha_prestamo, fecha_devolucion, fecha_fin, tipo_recurso) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """;
 
         try {
             conexion.setAutoCommit(false);
@@ -55,20 +49,9 @@ public class PrestamoDAO {
                     ps.setString(1, p.getId());
                     ps.setString(2, p.getIdUsuario());
                     ps.setString(3, p.getIdRecurso());
-                    ps.setDate(4, Date.valueOf(p.getFechaInicio()));
-
-                    if (p.getFechaDevolucion() != null) {
-                        ps.setDate(5, Date.valueOf(p.getFechaDevolucion()));
-                    } else {
-                        ps.setNull(5, Types.DATE);
-                    }
-
-                    if (p.getFechaFin() != null) {
-                        ps.setDate(6, Date.valueOf(p.getFechaFin()));
-                    } else {
-                        ps.setNull(6, Types.DATE);
-                    }
-
+                    ps.setDate(4, p.getFechaInicio() != null ? Date.valueOf(p.getFechaInicio()) : null);
+                    ps.setDate(5, p.getFechaDevolucion() != null ? Date.valueOf(p.getFechaDevolucion()) : null);
+                    ps.setDate(6, p.getFechaFin() != null ? Date.valueOf(p.getFechaFin()) : null);
                     ps.setString(7, p.getTipoRecurso());
                     ps.addBatch();
                 }
@@ -79,13 +62,14 @@ public class PrestamoDAO {
 
         } catch (SQLException e) {
             conexion.rollback();
+            System.err.println("❌ Error al guardar préstamos: " + e.getMessage());
             throw e;
-
         } finally {
             conexion.setAutoCommit(true);
         }
     }
 
+    // ❓ Verifica si un recurso tiene un préstamo pendiente (no devuelto)
     public boolean existenPrestamosParaRecurso(String idRecurso) {
         String sql = "SELECT COUNT(*) FROM prestamos WHERE id_recurso = ? AND fecha_devolucion IS NULL";
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
@@ -96,11 +80,12 @@ public class PrestamoDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error al verificar préstamos: " + e.getMessage());
+            System.err.println("❌ Error al verificar préstamos: " + e.getMessage());
             return false;
         }
     }
 
+    // 📋 Obtiene todos los préstamos de un usuario
     public List<Prestamo> obtenerPrestamosPorUsuario(String idUsuario) throws SQLException {
         List<Prestamo> prestamos = new ArrayList<>();
         String sql = "SELECT * FROM prestamos WHERE id_usuario = ?";
@@ -110,16 +95,7 @@ public class PrestamoDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Prestamo p = new Prestamo(
-                            rs.getString("id"),
-                            rs.getString("id_usuario"),
-                            rs.getString("id_recurso"),
-                            rs.getDate("fecha_prestamo").toLocalDate(),
-                            rs.getDate("fecha_devolucion") != null ? rs.getDate("fecha_devolucion").toLocalDate() : null,
-                            rs.getDate("fecha_fin") != null ? rs.getDate("fecha_fin").toLocalDate() : null,
-                            rs.getString("tipo_recurso")
-                    );
-                    prestamos.add(p);
+                    prestamos.add(mapearPrestamo(rs));
                 }
             }
         }
@@ -127,8 +103,12 @@ public class PrestamoDAO {
         return prestamos;
     }
 
+    // ➕ Registra un nuevo préstamo
     public boolean registrarPrestamo(String idPrestamo, String idUsuario, String idRecurso, LocalDate fechaPrestamo, String tipoRecurso) {
-        String sql = "INSERT INTO prestamos (id, id_usuario, id_recurso, fecha_prestamo, tipo_recurso) VALUES (?, ?, ?, ?, ?)";
+        String sql = """
+            INSERT INTO prestamos (id, id_usuario, id_recurso, fecha_prestamo, tipo_recurso)
+            VALUES (?, ?, ?, ?, ?)
+            """;
 
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, idPrestamo);
@@ -140,11 +120,12 @@ public class PrestamoDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("Error al registrar préstamo: " + e.getMessage());
+            System.err.println("❌ Error al registrar préstamo: " + e.getMessage());
             return false;
         }
     }
 
+    // ✔️ Marca un préstamo como devuelto
     public boolean registrarDevolucion(String idPrestamo, LocalDate fechaDevolucion) {
         String sql = "UPDATE prestamos SET fecha_devolucion = ? WHERE id = ?";
 
@@ -155,8 +136,30 @@ public class PrestamoDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("Error al registrar devolución: " + e.getMessage());
+            System.err.println("❌ Error al registrar devolución: " + e.getMessage());
             return false;
         }
+    }
+
+    // 🧱 Método auxiliar para mapear un ResultSet a un objeto Prestamo
+    private Prestamo mapearPrestamo(ResultSet rs) throws SQLException {
+        Date fechaPrestamoSql = rs.getDate("fecha_prestamo");
+        LocalDate fechaPrestamo = (fechaPrestamoSql != null) ? fechaPrestamoSql.toLocalDate() : null;
+
+        Date fechaDevolucionSql = rs.getDate("fecha_devolucion");
+        LocalDate fechaDevolucion = (fechaDevolucionSql != null) ? fechaDevolucionSql.toLocalDate() : null;
+
+        Date fechaFinSql = rs.getDate("fecha_fin");
+        LocalDate fechaFin = (fechaFinSql != null) ? fechaFinSql.toLocalDate() : null;
+
+        return new Prestamo(
+                rs.getString("id"),
+                rs.getString("id_usuario"),
+                rs.getString("id_recurso"),
+                fechaPrestamo,
+                fechaDevolucion,
+                fechaFin,
+                rs.getString("tipo_recurso")
+        );
     }
 }

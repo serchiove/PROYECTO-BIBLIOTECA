@@ -8,7 +8,7 @@ import java.util.List;
 
 public class AutenticacionService {
 
-    private Connection conexion;
+    private final Connection conexion;
 
     public AutenticacionService(Connection conexion) {
         this.conexion = conexion;
@@ -21,20 +21,16 @@ public class AutenticacionService {
             ps.setString(1, usuarioIngresado);
             ps.setString(2, passwordIngresado);
 
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                String rol = rs.getString("rol");
-                String id = rs.getString("id");
-                String nombre = rs.getString("nombre");
-                String usuario = rs.getString("usuario");
-                String password = rs.getString("contrasena");
-
-                return construirUsuario(id, nombre, usuario, password, rol);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return construirUsuarioDesdeResultSet(rs);
+                }
             }
 
         } catch (SQLException e) {
-            System.err.println("Error en autenticación: " + e.getMessage());
+            System.err.println("❌ Error en autenticación: " + e.getMessage());
         }
+
         return null;
     }
 
@@ -46,29 +42,32 @@ public class AutenticacionService {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                String rol = rs.getString("rol");
-                String id = rs.getString("id");
-                String nombre = rs.getString("nombre");
-                String usuario = rs.getString("usuario");
-                String password = rs.getString("contrasena");
-
-                Usuario u = construirUsuario(id, nombre, usuario, password, rol);
+                Usuario u = construirUsuarioDesdeResultSet(rs);
                 if (u != null) lista.add(u);
             }
 
         } catch (SQLException e) {
-            System.err.println("Error al obtener usuarios: " + e.getMessage());
+            System.err.println("❌ Error al obtener usuarios: " + e.getMessage());
         }
 
         return lista;
     }
 
-    private Usuario construirUsuario(String id, String nombre, String usuario, String contrasena, String rol) {
+    private Usuario construirUsuarioDesdeResultSet(ResultSet rs) throws SQLException {
+        String id = rs.getString("id");
+        String nombre = rs.getString("nombre");
+        String usuario = rs.getString("usuario");
+        String contrasena = rs.getString("contrasena");
+        String rol = rs.getString("rol");
+
         return switch (rol.toUpperCase()) {
             case "ADMIN" -> new Administrador(id, nombre, usuario, contrasena);
             case "PROFESOR" -> new Profesor(id, nombre, usuario, contrasena);
             case "ESTUDIANTE" -> new Estudiante(id, nombre, usuario, contrasena);
-            default -> null;
+            default -> {
+                System.err.println("⚠️ Rol desconocido: " + rol);
+                yield null;
+            }
         };
     }
 }

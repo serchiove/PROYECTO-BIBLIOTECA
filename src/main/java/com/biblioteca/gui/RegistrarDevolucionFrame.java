@@ -6,6 +6,7 @@ import com.biblioteca.usuarios.Usuario;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.SQLException;
 import java.util.List;
 
 public class RegistrarDevolucionFrame extends JFrame {
@@ -51,7 +52,7 @@ public class RegistrarDevolucionFrame extends JFrame {
             prestamos = prestamoService.listarPrestamos();
         } else {
             // Los estudiantes solo los suyos
-            prestamos = prestamoService.prestamosPorUsuario(usuario.getId());
+            prestamos = prestamoService.listarPrestamosPorUsuario(usuario.getId());
         }
 
         // Solo prestamos activos (no devueltos)
@@ -76,10 +77,15 @@ public class RegistrarDevolucionFrame extends JFrame {
             return;
         }
 
-        boolean exito = prestamoService.registrarDevolucion(
-                seleccionado.getIdUsuario(),
-                seleccionado.getIdRecurso()
-        );
+        boolean exito = false;
+        try {
+            exito = prestamoService.registrarDevolucion(
+                    seleccionado.getIdUsuario(),
+                    seleccionado.getIdRecurso()
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         if (exito) {
             JOptionPane.showMessageDialog(this, "Devolución registrada exitosamente.");

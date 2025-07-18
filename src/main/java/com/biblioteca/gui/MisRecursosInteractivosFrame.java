@@ -65,7 +65,7 @@ public class MisRecursosInteractivosFrame extends JFrame {
         panelRecursos.removeAll();
         areaMensajes.setText("");
 
-        List<Prestamo> prestamos = prestamoService.listarPrestamosPorUsuario(usuario.getUsuario());
+        List<Prestamo> prestamos = prestamoService.listarPrestamosPorUsuario(usuario.getUsuario(), "Multimedia");
         boolean hayRecursos = false;
 
         for (Prestamo p : prestamos) {

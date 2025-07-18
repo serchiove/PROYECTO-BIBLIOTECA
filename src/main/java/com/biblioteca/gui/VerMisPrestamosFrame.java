@@ -66,7 +66,7 @@ public class VerMisPrestamosFrame extends JFrame {
             String estadoDias = diasRestantes >= 0 ? diasRestantes + " días" : "VENCIDO";
 
             String titulo = "Recurso no encontrado";
-            Multimedia recurso = prestamoService.buscarRecursoPorId(p.getIdRecurso());
+            Multimedia recurso = (Multimedia) prestamoService.buscarRecursoPorId(p.getIdRecurso());
             if (recurso != null) {
                 titulo = recurso.getTitulo();
             }

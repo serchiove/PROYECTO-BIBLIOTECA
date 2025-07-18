@@ -1,0 +1,58 @@
+-- Tabla de usuarios (Administrador, Estudiante, Profesor)
+CREATE TABLE IF NOT EXISTS usuarios (
+    id TEXT PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    usuario TEXT NOT NULL UNIQUE,
+    contrasena TEXT NOT NULL,
+    rol TEXT CHECK (rol IN ('ADMIN', 'ESTUDIANTE', 'PROFESOR')) NOT NULL
+);
+
+-- Tabla de recursos multimedia generales
+CREATE TABLE IF NOT EXISTS multimedia (
+    id TEXT PRIMARY KEY,
+    titulo TEXT NOT NULL,
+    autor TEXT,
+    tipo TEXT NOT NULL,
+    disponible INTEGER NOT NULL CHECK (disponible IN (0, 1))
+);
+
+-- Tabla de libros digitales (subtipo de multimedia)
+CREATE TABLE IF NOT EXISTS libros (
+    id TEXT PRIMARY KEY,
+    titulo TEXT NOT NULL,
+    autor TEXT,
+    isbn TEXT,
+    tamanoMB INTEGER,
+    disponible INTEGER NOT NULL CHECK (disponible IN (0, 1))
+);
+
+-- Tabla de préstamos de recursos multimedia
+CREATE TABLE IF NOT EXISTS prestamos (
+    id TEXT PRIMARY KEY,
+    id_usuario TEXT NOT NULL,
+    id_recurso TEXT NOT NULL,
+    fecha_prestamo DATE NOT NULL,
+    fecha_devolucion DATE,
+    tipo_recurso TEXT NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_recurso) REFERENCES multimedia(id)
+);
+
+-- Tabla de recursos tecnológicos (tablets, computadoras)
+CREATE TABLE IF NOT EXISTS recursos_tecnologicos (
+    id TEXT PRIMARY KEY,
+    tipo TEXT NOT NULL CHECK (tipo IN ('Tablet', 'Computadora')),
+    estado TEXT NOT NULL CHECK (estado IN ('Disponible', 'Reservado'))
+);
+
+-- Tabla de préstamos de recursos tecnológicos
+CREATE TABLE IF NOT EXISTS prestamos_tecnologicos (
+    id TEXT PRIMARY KEY,
+    id_usuario TEXT NOT NULL,
+    id_recurso TEXT NOT NULL,
+    fecha_prestamo DATE NOT NULL,
+    fecha_devolucion DATE,
+    tipo_recurso TEXT NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_recurso) REFERENCES recursos_tecnologicos(id)
+);

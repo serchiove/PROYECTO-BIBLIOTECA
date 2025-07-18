@@ -1,14 +1,21 @@
 package com.biblioteca.gui;
 
+import com.biblioteca.data.PrestamoDAO;
+import com.biblioteca.data.PrestamoRecursoTecnologicoDAO;
+import com.biblioteca.data.RecursoTecnologicoDAO;
+import com.biblioteca.data.RecursoPrestado;
 import com.biblioteca.multimedia.Multimedia;
+import com.biblioteca.recurso.RecursoTecnologico;
 import com.biblioteca.servicios.MultimediaService;
 import com.biblioteca.servicios.PrestamoService;
+import com.biblioteca.servicios.RecursoTecnologicoService;
 import com.biblioteca.servicios.UsuarioService;
 import com.biblioteca.usuarios.Usuario;
 
 import javax.swing.*;
 import java.awt.*;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 public class GestionPrestamosFrame extends JFrame {
@@ -20,12 +27,18 @@ public class GestionPrestamosFrame extends JFrame {
 
     private JComboBox<Usuario> comboUsuarios;
     private JComboBox<Multimedia> comboRecursosDisponibles;
-    private JComboBox<Multimedia> comboRecursosPrestados;
+    private JComboBox<RecursoPrestado> comboRecursosPrestados;
 
     public GestionPrestamosFrame(Connection connection, Usuario usuarioActual) {
         this.usuarioService = new UsuarioService(connection);
         this.multimediaService = new MultimediaService(connection);
-        this.prestamoService = new PrestamoService(connection, multimediaService, usuarioService); // Si tienes constructor con Connection
+
+        PrestamoDAO prestamoDAO = new PrestamoDAO(connection);
+        PrestamoRecursoTecnologicoDAO prestamoRecTecDAO = new PrestamoRecursoTecnologicoDAO(connection);
+        RecursoTecnologicoDAO recursoTecnologicoDAO = new RecursoTecnologicoDAO(connection);
+        RecursoTecnologicoService recursoTecnologicoService = new RecursoTecnologicoService(recursoTecnologicoDAO);
+
+        this.prestamoService = new PrestamoService(prestamoDAO, prestamoRecTecDAO, multimediaService, recursoTecnologicoService, usuarioService);
         this.usuarioActual = usuarioActual;
 
         boolean esEstudiante = usuarioActual.getRol().equalsIgnoreCase("Estudiante");
@@ -80,7 +93,7 @@ public class GestionPrestamosFrame extends JFrame {
         panelFormulario.add(new JLabel("Recurso multimedia disponible:"));
         panelFormulario.add(comboRecursosDisponibles);
 
-        panelFormulario.add(new JLabel("Recurso multimedia prestado:"));
+        panelFormulario.add(new JLabel("Recurso prestado:"));
         panelFormulario.add(comboRecursosPrestados);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
@@ -90,13 +103,27 @@ public class GestionPrestamosFrame extends JFrame {
         btnPrestar.setBackground(grisOscuro);
         btnPrestar.setForeground(Color.WHITE);
         btnPrestar.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        btnPrestar.addActionListener(e -> registrarPrestamo());
+        btnPrestar.addActionListener(e -> {
+            try {
+                registrarPrestamo();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Error al registrar préstamo: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         JButton btnDevolver = new JButton("Registrar devolución");
         btnDevolver.setBackground(new Color(0, 120, 215));
         btnDevolver.setForeground(Color.WHITE);
         btnDevolver.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        btnDevolver.addActionListener(e -> registrarDevolucion());
+        btnDevolver.addActionListener(e -> {
+            try {
+                registrarDevolucion();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Error al registrar devolución: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         panelBotones.add(btnPrestar);
         panelBotones.add(btnDevolver);
@@ -144,9 +171,9 @@ public class GestionPrestamosFrame extends JFrame {
         if (usuario == null) return;
 
         try {
-            List<Multimedia> prestados = prestamoService.listarRecursosPrestadosPorUsuario(usuario.getId());
-            for (Multimedia recurso : prestados) {
-                comboRecursosPrestados.addItem(recurso);
+            List<RecursoPrestado> prestados = prestamoService.listarRecursosPrestadosPorUsuarioComoObjetos(usuario.getId());
+            for (RecursoPrestado rp : prestados) {
+                comboRecursosPrestados.addItem(rp);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error cargando recursos prestados: " + e.getMessage(),
@@ -154,7 +181,7 @@ public class GestionPrestamosFrame extends JFrame {
         }
     }
 
-    private void registrarPrestamo() {
+    private void registrarPrestamo() throws SQLException {
         Usuario usuario = (Usuario) comboUsuarios.getSelectedItem();
         Multimedia recurso = (Multimedia) comboRecursosDisponibles.getSelectedItem();
 
@@ -164,7 +191,7 @@ public class GestionPrestamosFrame extends JFrame {
             return;
         }
 
-        boolean ok = prestamoService.registrarPrestamo(usuario.getId(), recurso.getId());
+        boolean ok = prestamoService.registrarPrestamo(usuario.getId(), recurso.getId(), "Multimedia");
         if (ok) {
             JOptionPane.showMessageDialog(this, "✅ Préstamo registrado correctamente.");
             cargarRecursosDisponibles();
@@ -175,17 +202,20 @@ public class GestionPrestamosFrame extends JFrame {
         }
     }
 
-    private void registrarDevolucion() {
+    private void registrarDevolucion() throws SQLException {
         Usuario usuario = (Usuario) comboUsuarios.getSelectedItem();
-        Multimedia recurso = (Multimedia) comboRecursosPrestados.getSelectedItem();
+        RecursoPrestado recursoPrestado = (RecursoPrestado) comboRecursosPrestados.getSelectedItem();
 
-        if (usuario == null || recurso == null) {
+        if (usuario == null || recursoPrestado == null) {
             JOptionPane.showMessageDialog(this, "Debe seleccionar un usuario y un recurso prestado.",
                     "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        boolean ok = prestamoService.registrarDevolucion(usuario.getId(), recurso.getId());
+        String idPrestamo = recursoPrestado.getPrestamo().getId();
+        String tipoRecurso = recursoPrestado.getMultimedia() != null ? "Multimedia" : "Tecnologico";
+
+        boolean ok = prestamoService.registrarDevolucion(idPrestamo, tipoRecurso);
         if (ok) {
             JOptionPane.showMessageDialog(this, "✅ Devolución registrada correctamente.");
             cargarRecursosDisponibles();

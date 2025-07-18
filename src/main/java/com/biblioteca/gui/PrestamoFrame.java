@@ -9,6 +9,7 @@ import com.biblioteca.usuarios.Usuario;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.SQLException;
 import java.util.List;
 
 public class PrestamoFrame extends JFrame {
@@ -80,14 +81,10 @@ public class PrestamoFrame extends JFrame {
             comboUsuarios.setEnabled(true);
         }
 
-        // Cargar recursos disponibles (para préstamo)
-        // Mostrar solo recursos disponibles para préstamo y recursos que el usuario tiene prestados para devolución
-        // Pero aquí solo cargamos los disponibles para préstamo (devolver se gestiona aparte)
-        List<Multimedia> recursos = multimediaService.listarRecursos();
+        // Cargar recursos disponibles para préstamo
+        List<Multimedia> recursos = multimediaService.listarRecursosDisponibles();  // Cambié a listar solo disponibles
         for (Multimedia recurso : recursos) {
-            if (recurso.isDisponible()) {
-                comboRecursos.addItem(recurso);
-            }
+            comboRecursos.addItem(recurso);
         }
     }
 
@@ -108,7 +105,7 @@ public class PrestamoFrame extends JFrame {
         boolean ok = prestamoService.registrarPrestamo(usuario.getId(), recurso.getId());
         if (ok) {
             JOptionPane.showMessageDialog(this, "Préstamo registrado exitosamente.");
-            cargarDatos(usuario); // actualizar recursos disponibles
+            cargarDatos(usuario); // actualizar recursos disponibles y usuarios (si aplica)
         } else {
             JOptionPane.showMessageDialog(this, "No se pudo registrar el préstamo. Verifica disponibilidad.");
         }
@@ -122,8 +119,9 @@ public class PrestamoFrame extends JFrame {
             return;
         }
 
-        // Para devolución, mostramos solo los recursos que el usuario tiene actualmente en préstamo (no devueltos)
+        // Obtener recursos que el usuario tiene prestados y que no ha devuelto
         List<Multimedia> recursosPrestados = prestamoService.listarRecursosPrestadosPorUsuario(usuario.getId());
+
         if (recursosPrestados.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Este usuario no tiene recursos en préstamo para devolver.");
             return;
@@ -145,7 +143,12 @@ public class PrestamoFrame extends JFrame {
             return;
         }
 
-        boolean ok = prestamoService.registrarDevolucion(usuario.getId(), recursoADevolver.getId());
+        boolean ok = false;
+        try {
+            ok = prestamoService.registrarDevolucion(usuario.getId(), recursoADevolver.getId());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         if (ok) {
             JOptionPane.showMessageDialog(this, "Devolución registrada exitosamente.");
             cargarDatos(usuario);

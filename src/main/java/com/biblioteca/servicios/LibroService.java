@@ -9,7 +9,7 @@ import java.util.List;
 
 public class LibroService {
 
-    private Connection conexion;
+    private final Connection conexion;
 
     public LibroService(Connection conexion) {
         this.conexion = conexion;
@@ -25,6 +25,9 @@ public class LibroService {
             ps.setInt(5, libro.getTamanoMB());
             ps.setBoolean(6, libro.isDisponible());
             ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error al agregar libro: " + e.getMessage());
+            throw e;
         }
     }
 
@@ -33,18 +36,17 @@ public class LibroService {
         String sql = "SELECT * FROM libros";
         try (Statement stmt = conexion.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
+
             while (rs.next()) {
-                LibroDigital libro = new LibroDigital(
-                        rs.getString("id"),
-                        rs.getString("titulo"),
-                        rs.getString("autor"),
-                        rs.getString("isbn"),
-                        rs.getInt("tamanoMB"),
-                        rs.getBoolean("disponible")
-                );
+                LibroDigital libro = construirLibroDesdeResultSet(rs);
                 lista.add(libro);
             }
+
+        } catch (SQLException e) {
+            System.err.println("Error al listar libros: " + e.getMessage());
+            throw e;
         }
+
         return lista;
     }
 
@@ -52,19 +54,18 @@ public class LibroService {
         String sql = "SELECT * FROM libros WHERE id = ?";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, id);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return new LibroDigital(
-                            rs.getString("id"),
-                            rs.getString("titulo"),
-                            rs.getString("autor"),
-                            rs.getString("isbn"),
-                            rs.getInt("tamanoMB"),
-                            rs.getBoolean("disponible")
-                    );
+                    return construirLibroDesdeResultSet(rs);
                 }
             }
+
+        } catch (SQLException e) {
+            System.err.println("Error al buscar libro por ID: " + e.getMessage());
+            throw e;
         }
+
         return null;
     }
 
@@ -73,6 +74,20 @@ public class LibroService {
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, id);
             ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar libro: " + e.getMessage());
+            throw e;
         }
+    }
+
+    private LibroDigital construirLibroDesdeResultSet(ResultSet rs) throws SQLException {
+        return new LibroDigital(
+                rs.getString("id"),
+                rs.getString("titulo"),
+                rs.getString("autor"),
+                rs.getString("isbn"),
+                rs.getInt("tamanoMB"),
+                rs.getBoolean("disponible")
+        );
     }
 }

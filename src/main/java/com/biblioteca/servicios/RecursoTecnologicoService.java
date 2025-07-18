@@ -4,6 +4,7 @@ import com.biblioteca.data.RecursoTecnologicoDAO;
 import com.biblioteca.recurso.RecursoTecnologico;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
 public class RecursoTecnologicoService {
@@ -13,61 +14,108 @@ public class RecursoTecnologicoService {
     public RecursoTecnologicoService(RecursoTecnologicoDAO dao) {
         this.dao = dao;
     }
-    public RecursoTecnologico buscarPorId(String id) throws SQLException {
-        return dao.buscarPorId(id);
-    }
 
-    public boolean actualizarRecursoTecnologico(RecursoTecnologico recurso) throws SQLException {
-        return dao.actualizar(recurso);  // Asegúrate de tener este método en el DAO
-    }
-
-    public boolean marcarComoDisponible(String id) throws SQLException {
-        RecursoTecnologico recurso = dao.buscarPorId(id);
-        if (recurso != null && !"Disponible".equalsIgnoreCase(recurso.getEstado())) {
-            return dao.actualizarEstado(id, "Disponible");
+    public RecursoTecnologico buscarPorId(String id) {
+        try {
+            return dao.buscarPorId(id);
+        } catch (SQLException e) {
+            System.err.println("Error al buscar recurso tecnológico por ID: " + e.getMessage());
+            return null;
         }
-        return false;
     }
 
-    public List<RecursoTecnologico> getTodos() throws SQLException {
-        return dao.listarTodos();
-    }
-
-    public List<RecursoTecnologico> listarDisponibles() throws SQLException {
-        return dao.listarDisponibles();
-    }
-
-    public boolean reservarRecurso(String id) throws SQLException {
-        RecursoTecnologico recurso = dao.buscarPorId(id);
-        if (recurso != null && "Disponible".equalsIgnoreCase(recurso.getEstado())) {
-            return dao.actualizarEstado(id, "Reservado");
+    public boolean actualizarRecursoTecnologico(RecursoTecnologico recurso) {
+        try {
+            return dao.actualizar(recurso);
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar recurso tecnológico: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
-    public boolean reservarPorTipo(String tipo) throws SQLException {
-        List<RecursoTecnologico> disponibles = dao.listarDisponibles();
-        for (RecursoTecnologico recurso : disponibles) {
-            if (tipo.equalsIgnoreCase(recurso.getTipo())) {
-                return dao.actualizarEstado(recurso.getId(), "Reservado");
+    public boolean marcarComoDisponible(String id) {
+        try {
+            RecursoTecnologico recurso = dao.buscarPorId(id);
+            if (recurso != null && !"Disponible".equalsIgnoreCase(recurso.getEstado())) {
+                return dao.actualizarEstado(id, "Disponible");
             }
+        } catch (SQLException e) {
+            System.err.println("Error al marcar recurso tecnológico como disponible: " + e.getMessage());
         }
         return false;
     }
 
-    public boolean agregarRecurso(RecursoTecnologico recurso) throws SQLException {
-        return dao.agregar(recurso);
+    public List<RecursoTecnologico> getTodos() {
+        try {
+            return dao.listarTodos();
+        } catch (SQLException e) {
+            System.err.println("Error al listar todos los recursos tecnológicos: " + e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
-    public boolean eliminarRecurso(String id) throws SQLException {
-        return dao.eliminar(id);
+    public List<RecursoTecnologico> listarDisponibles() {
+        try {
+            return dao.listarDisponibles();
+        } catch (SQLException e) {
+            System.err.println("Error al listar recursos tecnológicos disponibles: " + e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
-    // Método para liberar recurso (marcar como disponible)
-    public boolean liberarRecurso(String id) throws SQLException {
-        RecursoTecnologico recurso = dao.buscarPorId(id);
-        if (recurso != null && "Reservado".equalsIgnoreCase(recurso.getEstado())) {
-            return dao.actualizarEstado(id, "Disponible");
+    public boolean reservarRecurso(String id) {
+        try {
+            RecursoTecnologico recurso = dao.buscarPorId(id);
+            if (recurso != null && "Disponible".equalsIgnoreCase(recurso.getEstado())) {
+                return dao.actualizarEstado(id, "Reservado");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al reservar recurso tecnológico: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean reservarPorTipo(String tipo) {
+        try {
+            List<RecursoTecnologico> disponibles = dao.listarDisponibles();
+            for (RecursoTecnologico recurso : disponibles) {
+                if (tipo.equalsIgnoreCase(recurso.getTipo())) {
+                    return dao.actualizarEstado(recurso.getId(), "Reservado");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al reservar recurso tecnológico por tipo: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean agregarRecurso(RecursoTecnologico recurso) {
+        try {
+            return dao.agregar(recurso);
+        } catch (SQLException e) {
+            System.err.println("Error al agregar recurso tecnológico: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean eliminarRecurso(String id) {
+        try {
+            return dao.eliminar(id);
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar recurso tecnológico: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /** Método para liberar recurso (marcar como disponible) */
+    public boolean liberarRecurso(String id) {
+        try {
+            RecursoTecnologico recurso = dao.buscarPorId(id);
+            if (recurso != null && "Reservado".equalsIgnoreCase(recurso.getEstado())) {
+                return dao.actualizarEstado(id, "Disponible");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al liberar recurso tecnológico: " + e.getMessage());
         }
         return false;
     }

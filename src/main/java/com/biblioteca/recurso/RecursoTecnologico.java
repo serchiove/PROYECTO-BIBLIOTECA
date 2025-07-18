@@ -29,6 +29,11 @@ public class RecursoTecnologico {
         return tipo;
     }
 
+    // Nuevo método para retornar un nombre representativo (como getNombre)
+    public String getNombre() {
+        return tipo; // Puedes cambiarlo si quieres que sea otra cosa
+    }
+
     public String getEstado() {
         return estado;
     }

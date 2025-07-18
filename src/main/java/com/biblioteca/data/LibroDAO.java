@@ -8,7 +8,7 @@ import java.util.List;
 
 public class LibroDAO {
 
-    private Connection conexion;
+    private final Connection conexion;
 
     public LibroDAO(Connection conexion) {
         this.conexion = conexion;
@@ -40,7 +40,7 @@ public class LibroDAO {
         return libros;
     }
 
-    public void insertarLibro(LibroDigital libro) {
+    public boolean insertarLibro(LibroDigital libro) {
         String sql = "INSERT INTO libros (id, titulo, autor, isbn, tamanoMB, disponible) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
@@ -50,39 +50,41 @@ public class LibroDAO {
             stmt.setString(4, libro.getIsbn());
             stmt.setInt(5, libro.getTamanoMB());
             stmt.setBoolean(6, libro.isDisponible());
-            stmt.executeUpdate();
-            System.out.println("✅ Libro insertado correctamente.");
+            int filas = stmt.executeUpdate();
+            return filas > 0;
         } catch (SQLException e) {
             System.err.println("❌ Error al insertar el libro: " + e.getMessage());
+            return false;
         }
     }
 
-    public void actualizarDisponibilidad(String id, boolean disponible) {
+    public boolean actualizarDisponibilidad(String id, boolean disponible) {
         String sql = "UPDATE libros SET disponible = ? WHERE id = ?";
 
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
             stmt.setBoolean(1, disponible);
             stmt.setString(2, id);
-            stmt.executeUpdate();
-            System.out.println("✅ Disponibilidad actualizada.");
+            int filas = stmt.executeUpdate();
+            return filas > 0;
         } catch (SQLException e) {
             System.err.println("❌ Error al actualizar la disponibilidad: " + e.getMessage());
+            return false;
         }
     }
 
-    public void eliminarLibro(String id) {
+    public boolean eliminarLibro(String id) {
         String sql = "DELETE FROM libros WHERE id = ?";
 
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
             stmt.setString(1, id);
-            stmt.executeUpdate();
-            System.out.println("✅ Libro eliminado.");
+            int filas = stmt.executeUpdate();
+            return filas > 0;
         } catch (SQLException e) {
             System.err.println("❌ Error al eliminar el libro: " + e.getMessage());
+            return false;
         }
     }
 
-    // ✅ Método adicional opcional
     public LibroDigital buscarLibroPorId(String id) {
         String sql = "SELECT * FROM libros WHERE id = ?";
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {

@@ -21,9 +21,14 @@ public class UsuarioService {
         return this.usuarioDAO;
     }
 
+    /**
+     * Crea un usuario nuevo según el rol especificado.
+     * Retorna false si el usuario ya existe o si el rol es inválido.
+     */
     public boolean crearUsuario(String id, String nombre, String usuarioLogin, String contrasena, String rol) {
         try {
             if (usuarioDAO.obtenerPorId(id) != null) {
+                System.err.println("El usuario con id " + id + " ya existe.");
                 return false;
             }
 
@@ -39,6 +44,7 @@ public class UsuarioService {
                     nuevoUsuario = new Administrador(id, nombre, usuarioLogin, contrasena);
                     break;
                 default:
+                    System.err.println("Rol inválido: " + rol);
                     return false;
             }
 
@@ -50,6 +56,10 @@ public class UsuarioService {
         }
     }
 
+    /**
+     * Autentica un usuario buscando coincidencia por usuario y contraseña.
+     * En caso de éxito, guarda el usuario activo y lo retorna.
+     */
     public Usuario autenticar(String usuarioLogin, String contrasena) {
         try {
             List<Usuario> usuarios = usuarioDAO.listar();
@@ -73,6 +83,7 @@ public class UsuarioService {
         return usuarioActivo;
     }
 
+    // Métodos específicos para crear usuarios con roles predefinidos
     public boolean registrarEstudiante(String id, String nombre, String usuario, String contrasena) {
         return crearUsuario(id, nombre, usuario, contrasena, "ESTUDIANTE");
     }
@@ -81,15 +92,23 @@ public class UsuarioService {
         return crearUsuario(id, nombre, usuario, contrasena, "PROFESOR");
     }
 
+    /**
+     * Lista todos los usuarios de la base de datos.
+     * Retorna una lista vacía en caso de error.
+     */
     public List<Usuario> listarUsuarios() {
         try {
             return usuarioDAO.listar();
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("❌ Error al listar usuarios: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
+    /**
+     * Busca un usuario por su ID.
+     * Retorna null si no lo encuentra o hay error.
+     */
     public Usuario buscarUsuarioPorId(String id) {
         try {
             return usuarioDAO.obtenerPorId(id);
@@ -99,6 +118,10 @@ public class UsuarioService {
         }
     }
 
+    /**
+     * Elimina un usuario por su ID.
+     * Retorna false si hay error.
+     */
     public boolean eliminarUsuario(String id) {
         try {
             return usuarioDAO.eliminar(id);

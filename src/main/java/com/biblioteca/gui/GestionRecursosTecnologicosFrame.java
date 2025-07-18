@@ -8,7 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 public class GestionRecursosTecnologicosFrame extends JFrame {
@@ -58,8 +57,9 @@ public class GestionRecursosTecnologicosFrame extends JFrame {
                     areaRecursos.append(r.toString() + "\n");
                 }
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error al listar recursos: " + ex.getMessage());
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al listar recursos: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -67,8 +67,9 @@ public class GestionRecursosTecnologicosFrame extends JFrame {
         try {
             boolean reservado = recursoService.reservarPorTipo("Tablet");
             mostrarResultadoReserva(reservado, "Tablet");
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error al reservar tablet: " + ex.getMessage());
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al reservar tablet: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -76,8 +77,9 @@ public class GestionRecursosTecnologicosFrame extends JFrame {
         try {
             boolean reservado = recursoService.reservarPorTipo("Computadora");
             mostrarResultadoReserva(reservado, "Computadora");
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error al reservar computadora: " + ex.getMessage());
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al reservar computadora: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
