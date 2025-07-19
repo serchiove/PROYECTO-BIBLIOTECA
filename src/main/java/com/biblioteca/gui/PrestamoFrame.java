@@ -20,6 +20,9 @@ public class PrestamoFrame extends JFrame {
     private JComboBox<Usuario> comboUsuarios;
     private JComboBox<Multimedia> comboRecursos;
 
+    private JButton btnPrestar;
+    private JButton btnDevolver;
+
     public PrestamoFrame(Usuario usuarioActual, PrestamoService prestamoService,
                          MultimediaService multimediaService, UsuarioService usuarioService) {
         super("Registrar Préstamo o Devolución");
@@ -48,10 +51,10 @@ public class PrestamoFrame extends JFrame {
         panelFormulario.add(new JLabel("Recurso disponible:"));
         panelFormulario.add(comboRecursos);
 
-        JButton btnPrestar = new JButton("Registrar Préstamo");
+        btnPrestar = new JButton("Registrar Préstamo");
         btnPrestar.addActionListener(e -> registrarPrestamo());
 
-        JButton btnDevolver = new JButton("Registrar Devolución");
+        btnDevolver = new JButton("Registrar Devolución");
         btnDevolver.addActionListener(e -> registrarDevolucion());
 
         panelFormulario.add(btnPrestar);
@@ -81,11 +84,13 @@ public class PrestamoFrame extends JFrame {
             comboUsuarios.setEnabled(true);
         }
 
-        // Cargar recursos disponibles para préstamo
-        List<Multimedia> recursos = multimediaService.listarRecursosDisponibles();  // Cambié a listar solo disponibles
+        // Cargar recursos disponibles
+        List<Multimedia> recursos = multimediaService.listarRecursosDisponibles();
         for (Multimedia recurso : recursos) {
             comboRecursos.addItem(recurso);
         }
+
+        btnPrestar.setEnabled(comboRecursos.getItemCount() > 0);
     }
 
     private void registrarPrestamo() {
@@ -98,16 +103,21 @@ public class PrestamoFrame extends JFrame {
         }
 
         if (!recurso.isDisponible()) {
-            JOptionPane.showMessageDialog(this, "El recurso seleccionado no está disponible para préstamo.");
+            JOptionPane.showMessageDialog(this, "El recurso seleccionado no está disponible.");
             return;
         }
 
-        boolean ok = prestamoService.registrarPrestamo(usuario.getId(), recurso.getId());
-        if (ok) {
-            JOptionPane.showMessageDialog(this, "Préstamo registrado exitosamente.");
-            cargarDatos(usuario); // actualizar recursos disponibles y usuarios (si aplica)
-        } else {
-            JOptionPane.showMessageDialog(this, "No se pudo registrar el préstamo. Verifica disponibilidad.");
+        try {
+            boolean ok = prestamoService.registrarPrestamo(usuario.getId(), recurso.getId(), "Multimedia");
+            if (ok) {
+                JOptionPane.showMessageDialog(this, "Préstamo registrado exitosamente.");
+                cargarDatos(null);
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo registrar el préstamo.");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al registrar préstamo: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -119,41 +129,37 @@ public class PrestamoFrame extends JFrame {
             return;
         }
 
-        // Obtener recursos que el usuario tiene prestados y que no ha devuelto
-        List<Multimedia> recursosPrestados = prestamoService.listarRecursosPrestadosPorUsuario(usuario.getId());
-
-        if (recursosPrestados.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Este usuario no tiene recursos en préstamo para devolver.");
-            return;
-        }
-
-        // Pedir que seleccione qué recurso devolver
-        Multimedia recursoADevolver = (Multimedia) JOptionPane.showInputDialog(
-                this,
-                "Selecciona el recurso a devolver:",
-                "Devolución",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                recursosPrestados.toArray(),
-                null
-        );
-
-        if (recursoADevolver == null) {
-            // Canceló selección
-            return;
-        }
-
-        boolean ok = false;
         try {
-            ok = prestamoService.registrarDevolucion(usuario.getId(), recursoADevolver.getId());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        if (ok) {
-            JOptionPane.showMessageDialog(this, "Devolución registrada exitosamente.");
-            cargarDatos(usuario);
-        } else {
-            JOptionPane.showMessageDialog(this, "No se pudo registrar la devolución. Verifica que el recurso esté prestado.");
+            List<Multimedia> recursosPrestados = prestamoService.listarRecursosPrestadosPorUsuario(usuario.getId());
+
+            if (recursosPrestados.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Este usuario no tiene recursos en préstamo.");
+                return;
+            }
+
+            Multimedia recursoADevolver = (Multimedia) JOptionPane.showInputDialog(
+                    this,
+                    "Selecciona el recurso a devolver:",
+                    "Devolución",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    recursosPrestados.toArray(),
+                    null
+            );
+
+            if (recursoADevolver == null) return;
+
+            boolean ok = prestamoService.registrarDevolucion(usuario.getId(), recursoADevolver.getId());
+            if (ok) {
+                JOptionPane.showMessageDialog(this, "Devolución registrada.");
+                cargarDatos(null);
+            } else {
+                JOptionPane.showMessageDialog(this, "Error al registrar la devolución.");
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

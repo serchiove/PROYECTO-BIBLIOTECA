@@ -39,6 +39,7 @@ public class PrestamoService {
         return multimediaService;
     }
 
+
     public boolean registrarPrestamo(String idUsuario, String idRecurso, String tipoRecurso) throws SQLException {
         if (idUsuario == null || idUsuario.isBlank() || idRecurso == null || idRecurso.isBlank()) {
             System.err.println("ID Usuario o Recurso inválido para registrar préstamo");
@@ -98,6 +99,9 @@ public class PrestamoService {
             System.err.println("Tipo de recurso desconocido: " + tipoRecurso);
             return false;
         }
+    }
+    public UsuarioService getUsuarioService() {
+        return usuarioService;
     }
 
     public boolean registrarDevolucion(String idPrestamo, String tipoRecurso) throws SQLException {
@@ -196,6 +200,28 @@ public class PrestamoService {
             return List.of();
         }
     }
+    public RecursoTecnologicoService getRecursoTecnologicoService() {
+        return recursoTecnologicoService;
+    }
+    public List<RecursoPrestado> listarRecursosPrestadosActivosComoObjetos() {
+        List<Prestamo> prestamosActivos = this.listarPrestamosActivos();
+        List<RecursoPrestado> recursos = new ArrayList<>();
+
+        for (Prestamo p : prestamosActivos) {
+            Multimedia m = multimediaService.buscarPorId(p.getIdRecurso());
+            if (m != null) {
+                recursos.add(new RecursoPrestado(p, m)); // usa constructor Prestamo + Multimedia
+            } else {
+                RecursoTecnologico t = recursoTecnologicoService.buscarPorId(p.getIdRecurso());
+                if (t != null) {
+                    recursos.add(new RecursoPrestado(p, t)); // usa constructor Prestamo + Tecnologico
+                }
+            }
+        }
+
+        return recursos;
+    }
+
 
     public List<Prestamo> listarPrestamosPorUsuario(String idUsuario) {
         return listarPrestamosPorUsuario(idUsuario, "Multimedia");
@@ -279,7 +305,17 @@ public class PrestamoService {
             return Collections.emptyList();
         }
     }
+    public boolean devolverRecurso(String idPrestamo, LocalDate fechaDevolucion, String tipoRecurso) {
+        if ("Multimedia".equalsIgnoreCase(tipoRecurso)) {
+            return prestamoDAO.registrarDevolucion(idPrestamo, fechaDevolucion);
+        } else if ("Tecnologico".equalsIgnoreCase(tipoRecurso)) {
+            return prestamoRecTecDAO.registrarDevolucion(idPrestamo, fechaDevolucion);
+        } else {
+            System.err.println("Tipo de recurso desconocido para devolución: " + tipoRecurso);
+            return false;
+        }
+    }
 
-    public boolean registrarPrestamo(String id, String id1) {
-    return false;}
+
+
 }

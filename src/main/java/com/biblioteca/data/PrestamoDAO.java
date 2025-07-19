@@ -1,7 +1,10 @@
 package com.biblioteca.data;
 
 import java.sql.*;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -143,14 +146,14 @@ public class PrestamoDAO {
 
     // 🧱 Método auxiliar para mapear un ResultSet a un objeto Prestamo
     private Prestamo mapearPrestamo(ResultSet rs) throws SQLException {
-        Date fechaPrestamoSql = rs.getDate("fecha_prestamo");
-        LocalDate fechaPrestamo = (fechaPrestamoSql != null) ? fechaPrestamoSql.toLocalDate() : null;
+        String fechaPrestamoStr = rs.getString("fecha_prestamo");
+        LocalDate fechaPrestamo = parsearFecha(fechaPrestamoStr);
 
-        Date fechaDevolucionSql = rs.getDate("fecha_devolucion");
-        LocalDate fechaDevolucion = (fechaDevolucionSql != null) ? fechaDevolucionSql.toLocalDate() : null;
+        String fechaDevolucionStr = rs.getString("fecha_devolucion");
+        LocalDate fechaDevolucion = parsearFecha(fechaDevolucionStr);
 
-        Date fechaFinSql = rs.getDate("fecha_fin");
-        LocalDate fechaFin = (fechaFinSql != null) ? fechaFinSql.toLocalDate() : null;
+        String fechaFinStr = rs.getString("fecha_fin");
+        LocalDate fechaFin = parsearFecha(fechaFinStr);
 
         return new Prestamo(
                 rs.getString("id"),
@@ -161,5 +164,26 @@ public class PrestamoDAO {
                 fechaFin,
                 rs.getString("tipo_recurso")
         );
+    }
+
+    // 🔧 Método para parsear fecha en formato String, soportando timestamps en ms o formato ISO
+    private LocalDate parsearFecha(String fechaStr) {
+        if (fechaStr == null || fechaStr.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Intentar interpretar como número (milisegundos epoch)
+            long millis = Long.parseLong(fechaStr);
+            return Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate();
+        } catch (NumberFormatException e) {
+            // No es número, intentar parsear como ISO
+            try {
+                return LocalDate.parse(fechaStr);
+            } catch (DateTimeParseException ex) {
+                System.err.println("No se pudo parsear la fecha: " + fechaStr);
+                return null;
+            }
+        }
     }
 }

@@ -4,20 +4,20 @@ import com.biblioteca.multimedia.Multimedia;
 import com.biblioteca.recurso.RecursoTecnologico;
 
 public class RecursoPrestado {
-    private final Prestamo prestamo;
-    private final Multimedia multimedia;
-    private final RecursoTecnologico recursoTecnologico;
+    private Prestamo prestamo;
+    private Multimedia multimedia;
+    private RecursoTecnologico tecnologico;
 
     public RecursoPrestado(Prestamo prestamo, Multimedia multimedia) {
         this.prestamo = prestamo;
         this.multimedia = multimedia;
-        this.recursoTecnologico = null;
+        this.tecnologico = null;
     }
 
-    public RecursoPrestado(Prestamo prestamo, RecursoTecnologico recursoTecnologico) {
+    public RecursoPrestado(Prestamo prestamo, RecursoTecnologico tecnologico) {
         this.prestamo = prestamo;
         this.multimedia = null;
-        this.recursoTecnologico = recursoTecnologico;
+        this.tecnologico = tecnologico;
     }
 
     public Prestamo getPrestamo() {
@@ -28,18 +28,23 @@ public class RecursoPrestado {
         return multimedia;
     }
 
-    public RecursoTecnologico getRecursoTecnologico() {
-        return recursoTecnologico;
+    public RecursoTecnologico getTecnologico() {
+        return tecnologico;
+    }
+
+    // ✅ Este método te permite obtener directamente el ID del préstamo
+    public String getIdPrestamo() {
+        return prestamo != null ? prestamo.getId() : null;
     }
 
     @Override
     public String toString() {
         if (multimedia != null) {
-            return multimedia.getTitulo();
-        } else if (recursoTecnologico != null) {
-            return recursoTecnologico.getNombre();
+            return "[Multimedia] " + multimedia.getTitulo();
+        } else if (tecnologico != null) {
+            return "[Tecnológico] " + tecnologico.getNombre();
         } else {
-            return "Recurso desconocido";
+            return "[Recurso desconocido]";
         }
     }
 }

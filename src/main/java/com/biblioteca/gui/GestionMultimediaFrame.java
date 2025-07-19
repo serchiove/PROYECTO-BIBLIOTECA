@@ -176,7 +176,7 @@ public class GestionMultimediaFrame extends JFrame {
 
     private void listarRecursos() {
         try {
-            List<Multimedia> recursos = multimediaService.listarRecursos();
+            List<Multimedia> recursos = multimediaService.listarRecursosDisponibles();
             StringBuilder sb = new StringBuilder("📚 Todos los recursos:\n\n");
             for (Multimedia r : recursos) {
                 sb.append(r).append("\n\n");

@@ -1,5 +1,8 @@
 package com.biblioteca.data;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -24,9 +27,12 @@ public class PrestamoRecursoTecnologicoDAO {
                 String id = rs.getString("id");
                 String idUsuario = rs.getString("id_usuario");
                 String idRecurso = rs.getString("id_recurso_tecnologico");
-                LocalDate fechaPrestamo = rs.getDate("fecha_prestamo").toLocalDate();
-                LocalDate fechaDevolucion = rs.getDate("fecha_devolucion") != null ? rs.getDate("fecha_devolucion").toLocalDate() : null;
-                LocalDate fechaFin = rs.getDate("fecha_fin") != null ? rs.getDate("fecha_fin").toLocalDate() : null;
+
+                // Parseo seguro de fechas
+                LocalDate fechaPrestamo = parsearFecha(rs.getString("fecha_prestamo"));
+                LocalDate fechaDevolucion = parsearFecha(rs.getString("fecha_devolucion"));
+                LocalDate fechaFin = parsearFecha(rs.getString("fecha_fin"));
+
                 String tipoRecurso = rs.getString("tipo_recurso");
 
                 Prestamo prestamo = new Prestamo(id, idUsuario, idRecurso, fechaPrestamo, fechaDevolucion, fechaFin, tipoRecurso);
@@ -35,6 +41,28 @@ public class PrestamoRecursoTecnologicoDAO {
         }
         return prestamos;
     }
+
+    private LocalDate parsearFecha(String fechaStr) {
+        if (fechaStr == null || fechaStr.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Intentar interpretar como número (milisegundos epoch)
+            long millis = Long.parseLong(fechaStr);
+            return Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate();
+        } catch (NumberFormatException e) {
+            // No es número, intentar parsear como texto ISO yyyy-MM-dd
+            try {
+                return LocalDate.parse(fechaStr);
+            } catch (DateTimeParseException ex) {
+                // No se pudo interpretar, retornar null o manejar error
+                return null;
+            }
+        }
+    }
+
+
 
     public boolean registrarPrestamo(String idPrestamo, String idUsuario, String idRecurso, LocalDate fechaPrestamo, String tipoRecurso) {
         String sql = "INSERT INTO prestamos_recursos_tecnologicos (id, id_usuario, id_recurso_tecnologico, fecha_prestamo, tipo_recurso) VALUES (?, ?, ?, ?, ?)";
@@ -93,9 +121,12 @@ public class PrestamoRecursoTecnologicoDAO {
                 while (rs.next()) {
                     String id = rs.getString("id");
                     String idRecurso = rs.getString("id_recurso_tecnologico");
-                    LocalDate fechaPrestamo = rs.getDate("fecha_prestamo").toLocalDate();
-                    LocalDate fechaDevolucion = rs.getDate("fecha_devolucion") != null ? rs.getDate("fecha_devolucion").toLocalDate() : null;
-                    LocalDate fechaFin = rs.getDate("fecha_fin") != null ? rs.getDate("fecha_fin").toLocalDate() : null;
+
+                    // Parseo seguro de fechas
+                    LocalDate fechaPrestamo = parsearFecha(rs.getString("fecha_prestamo"));
+                    LocalDate fechaDevolucion = parsearFecha(rs.getString("fecha_devolucion"));
+                    LocalDate fechaFin = parsearFecha(rs.getString("fecha_fin"));
+
                     String tipoRecurso = rs.getString("tipo_recurso");
 
                     Prestamo prestamo = new Prestamo(id, idUsuario, idRecurso, fechaPrestamo, fechaDevolucion, fechaFin, tipoRecurso);
@@ -105,4 +136,5 @@ public class PrestamoRecursoTecnologicoDAO {
         }
         return prestamos;
     }
+
 }
