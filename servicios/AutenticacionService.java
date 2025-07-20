@@ -1,12 +1,3 @@
-
-public class AutenticacionService {
-
-    private final Connection conexion;
-
-    public AutenticacionService(Connection conexion) {
-        this.conexion = conexion;
-    }
-
     public Usuario autenticar(String usuarioIngresado, String passwordIngresado) {
         String sql = "SELECT * FROM usuarios WHERE usuario = ? AND contrasena = ?";
 
