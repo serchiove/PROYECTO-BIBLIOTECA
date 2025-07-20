@@ -32,6 +32,11 @@ public class LibroDigital extends Multimedia {
     public String getIsbn() {
         return isbn;
     }
+    @Override
+    public String toString() {
+        return String.format("Libro Digital - ID: %s, Título: %s, Autor: %s, ISBN: %s, Tamaño: %dMB",
+                getId(), getTitulo(), getAutor(), isbn, tamanoMB);
+    }
 
     public void setIsbn(String isbn) {
         this.isbn = isbn;

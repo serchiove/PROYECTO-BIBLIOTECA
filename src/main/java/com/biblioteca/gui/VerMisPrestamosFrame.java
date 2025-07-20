@@ -5,6 +5,7 @@ import com.biblioteca.multimedia.Multimedia;
 import com.biblioteca.servicios.PrestamoService;
 import com.biblioteca.usuarios.Usuario;
 
+import com.biblioteca.recurso.RecursoTecnologico;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -65,10 +66,13 @@ public class VerMisPrestamosFrame extends JFrame {
 
             String estadoDias = diasRestantes >= 0 ? diasRestantes + " días" : "VENCIDO";
 
+            Object recurso = prestamoService.buscarRecursoPorId(p.getIdRecurso());
             String titulo = "Recurso no encontrado";
-            Multimedia recurso = (Multimedia) prestamoService.buscarRecursoPorId(p.getIdRecurso());
-            if (recurso != null) {
-                titulo = recurso.getTitulo();
+
+            if (recurso instanceof Multimedia) {
+                titulo = ((Multimedia) recurso).getTitulo();
+            } else if (recurso instanceof RecursoTecnologico) {
+                titulo = ((RecursoTecnologico) recurso).getTipo();  // o cualquier campo que identifique el recurso
             }
 
             modelo.addRow(new Object[]{

@@ -21,7 +21,7 @@ public class GestionUsuariosFrame extends JFrame {
         this.usuarioService = usuarioService;
 
         setTitle("Gestión de Usuarios");
-        setSize(600, 400);
+        setSize(650, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         initUI();
@@ -32,7 +32,8 @@ public class GestionUsuariosFrame extends JFrame {
     private void initUI() {
         setLayout(new BorderLayout(10, 10));
 
-        modeloUsuarios = new DefaultTableModel(new Object[]{"ID", "Nombre Completo", "Rol"}, 0) {
+        // Ahora agregamos columna "Usuario" en el modelo
+        modeloUsuarios = new DefaultTableModel(new Object[]{"ID", "Usuario", "Nombre Completo", "Rol"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -63,6 +64,7 @@ public class GestionUsuariosFrame extends JFrame {
         for (Usuario u : usuarios) {
             modeloUsuarios.addRow(new Object[]{
                     u.getId(),
+                    u.getUsuario(),    // Aquí mostramos el usuario (login)
                     u.getNombre(),
                     u.getRol()
             });
@@ -72,14 +74,14 @@ public class GestionUsuariosFrame extends JFrame {
     private void agregarUsuario() {
         JTextField txtId = new JTextField();
         JTextField txtNombre = new JTextField();
-        JTextField txtUsuario = new JTextField(); // <- NUEVO CAMPO
+        JTextField txtUsuario = new JTextField(); // Campo para login
         JTextField txtRol = new JTextField();
         JTextField txtPassword = new JTextField();
 
         Object[] campos = {
                 "ID:", txtId,
                 "Nombre completo:", txtNombre,
-                "Usuario (login):", txtUsuario,  // <- NUEVO CAMPO
+                "Usuario (login):", txtUsuario,
                 "Rol (ADMIN, PROFESOR, ESTUDIANTE):", txtRol,
                 "Password:", txtPassword
         };
@@ -88,7 +90,7 @@ public class GestionUsuariosFrame extends JFrame {
         if (opcion == JOptionPane.OK_OPTION) {
             String id = txtId.getText().trim();
             String nombre = txtNombre.getText().trim();
-            String usuarioLogin = txtUsuario.getText().trim(); // <- NUEVO
+            String usuarioLogin = txtUsuario.getText().trim();
             String rol = txtRol.getText().trim().toUpperCase();
             String password = txtPassword.getText().trim();
 
@@ -106,7 +108,6 @@ public class GestionUsuariosFrame extends JFrame {
             }
         }
     }
-
 
     private void eliminarUsuario() {
         int filaSeleccionada = tablaUsuarios.getSelectedRow();
@@ -128,5 +129,4 @@ public class GestionUsuariosFrame extends JFrame {
             }
         }
     }
-
 }

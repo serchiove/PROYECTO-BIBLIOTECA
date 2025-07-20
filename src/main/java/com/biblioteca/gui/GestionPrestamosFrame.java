@@ -23,10 +23,11 @@ public class GestionPrestamosFrame extends JFrame {
     private final PrestamoService prestamoService;
     private final UsuarioService usuarioService;
     private final MultimediaService multimediaService;
+    private final RecursoTecnologicoService recursoTecnologicoService;
     private final Usuario usuarioActual;
 
     private JComboBox<Usuario> comboUsuarios;
-    private JComboBox<Multimedia> comboRecursosDisponibles;
+    private JComboBox<Object> comboRecursosDisponibles; // Cambiado a Object para multimedia o recurso tecnológico
     private JComboBox<RecursoPrestado> comboRecursosPrestados;
 
     public GestionPrestamosFrame(Connection connection, Usuario usuarioActual) {
@@ -36,7 +37,7 @@ public class GestionPrestamosFrame extends JFrame {
         PrestamoDAO prestamoDAO = new PrestamoDAO(connection);
         PrestamoRecursoTecnologicoDAO prestamoRecTecDAO = new PrestamoRecursoTecnologicoDAO(connection);
         RecursoTecnologicoDAO recursoTecnologicoDAO = new RecursoTecnologicoDAO(connection);
-        RecursoTecnologicoService recursoTecnologicoService = new RecursoTecnologicoService(recursoTecnologicoDAO);
+        this.recursoTecnologicoService = new RecursoTecnologicoService(recursoTecnologicoDAO);
 
         this.prestamoService = new PrestamoService(prestamoDAO, prestamoRecTecDAO, multimediaService, recursoTecnologicoService, usuarioService);
         this.usuarioActual = usuarioActual;
@@ -90,7 +91,7 @@ public class GestionPrestamosFrame extends JFrame {
         panelFormulario.add(new JLabel("Usuario:"));
         panelFormulario.add(comboUsuarios);
 
-        panelFormulario.add(new JLabel("Recurso multimedia disponible:"));
+        panelFormulario.add(new JLabel("Recurso disponible:"));
         panelFormulario.add(comboRecursosDisponibles);
 
         panelFormulario.add(new JLabel("Recurso prestado:"));
@@ -100,8 +101,8 @@ public class GestionPrestamosFrame extends JFrame {
         panelBotones.setBackground(grisClaro);
 
         JButton btnPrestar = new JButton("Registrar préstamo");
-        btnPrestar.setBackground(grisOscuro);
-        btnPrestar.setForeground(Color.WHITE);
+        btnPrestar.setBackground(grisOscuro); // Fondo claro o el que estés usando
+        btnPrestar.setForeground(Color.BLACK); // Letras oscuras
         btnPrestar.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btnPrestar.addActionListener(e -> {
             try {
@@ -113,8 +114,8 @@ public class GestionPrestamosFrame extends JFrame {
         });
 
         JButton btnDevolver = new JButton("Registrar devolución");
-        btnDevolver.setBackground(new Color(0, 120, 215));
-        btnDevolver.setForeground(Color.WHITE);
+        btnDevolver.setBackground(new Color(23, 36, 46)); // Mantienes este fondo
+        btnDevolver.setForeground(Color.BLACK); // Letras oscuras
         btnDevolver.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btnDevolver.addActionListener(e -> {
             try {
@@ -124,6 +125,7 @@ public class GestionPrestamosFrame extends JFrame {
                         "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+
 
         panelBotones.add(btnPrestar);
         panelBotones.add(btnDevolver);
@@ -156,8 +158,14 @@ public class GestionPrestamosFrame extends JFrame {
     private void cargarRecursosDisponibles() {
         comboRecursosDisponibles.removeAllItems();
         try {
-            List<Multimedia> disponibles = prestamoService.listarRecursosDisponibles();
-            for (Multimedia r : disponibles) {
+            // Cargar recursos multimedia disponibles
+            List<Multimedia> multimediaDisponibles = prestamoService.listarRecursosDisponibles();
+            for (Multimedia r : multimediaDisponibles) {
+                comboRecursosDisponibles.addItem(r);
+            }
+            // Cargar recursos tecnológicos disponibles
+            List<RecursoTecnologico> tecnologicosDisponibles = recursoTecnologicoService.listarDisponibles();
+            for (RecursoTecnologico r : tecnologicosDisponibles) {
                 comboRecursosDisponibles.addItem(r);
             }
         } catch (Exception e) {
@@ -167,7 +175,7 @@ public class GestionPrestamosFrame extends JFrame {
     }
 
     private void cargarRecursosPrestados(Usuario usuario) {
-        comboRecursosPrestados.removeAllItems();
+        comboRecursosPrestados.removeAllItems(); // Limpia combo antes
         if (usuario == null) return;
 
         try {
@@ -181,17 +189,33 @@ public class GestionPrestamosFrame extends JFrame {
         }
     }
 
+
     private void registrarPrestamo() throws SQLException {
         Usuario usuario = (Usuario) comboUsuarios.getSelectedItem();
-        Multimedia recurso = (Multimedia) comboRecursosDisponibles.getSelectedItem();
+        Object recurso = comboRecursosDisponibles.getSelectedItem();
 
         if (usuario == null || recurso == null) {
-            JOptionPane.showMessageDialog(this, "Debe seleccionar un usuario y un recurso multimedia.",
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un usuario y un recurso.",
                     "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        boolean ok = prestamoService.registrarPrestamo(usuario.getId(), recurso.getId(), "Multimedia");
+        String tipoRecurso = null;
+        String idRecurso = null;
+
+        if (recurso instanceof Multimedia) {
+            tipoRecurso = "Multimedia";
+            idRecurso = ((Multimedia) recurso).getId();
+        } else if (recurso instanceof RecursoTecnologico) {
+            tipoRecurso = "Tecnologico";
+            idRecurso = ((RecursoTecnologico) recurso).getId();
+        } else {
+            JOptionPane.showMessageDialog(this, "Tipo de recurso no soportado.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean ok = prestamoService.registrarPrestamo(usuario.getId(), idRecurso, tipoRecurso);
         if (ok) {
             JOptionPane.showMessageDialog(this, "✅ Préstamo registrado correctamente.");
             cargarRecursosDisponibles();

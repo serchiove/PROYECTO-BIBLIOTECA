@@ -1,7 +1,9 @@
 package com.biblioteca.gui;
 
 import com.biblioteca.multimedia.Multimedia;
+import com.biblioteca.recurso.RecursoTecnologico;
 import com.biblioteca.servicios.MultimediaService;
+import com.biblioteca.servicios.RecursoTecnologicoService;
 import com.biblioteca.servicios.PrestamoService;
 import com.biblioteca.usuarios.Usuario;
 
@@ -11,20 +13,25 @@ import java.util.List;
 
 public class VerRecursosFrame extends JFrame {
 
-    private final JList<Multimedia> listaRecursos;
-    private final DefaultListModel<Multimedia> modeloLista;
+    private final JList<Object> listaRecursos; // Cambiado a Object para mezclar tipos
+    private final DefaultListModel<Object> modeloLista;
     private final JTextArea areaMensajes;
     private final PrestamoService prestamoService;
     private final MultimediaService multimediaService;
+    private final RecursoTecnologicoService recursoTecnologicoService; // Nuevo servicio
     private final Usuario usuario;
 
-    public VerRecursosFrame(Usuario usuario, PrestamoService prestamoService) {
+    public VerRecursosFrame(Usuario usuario,
+                            PrestamoService prestamoService,
+                            MultimediaService multimediaService,
+                            RecursoTecnologicoService recursoTecnologicoService) {
         this.usuario = usuario;
         this.prestamoService = prestamoService;
-        this.multimediaService = prestamoService != null ? prestamoService.getMultimediaService() : null;
+        this.multimediaService = multimediaService;
+        this.recursoTecnologicoService = recursoTecnologicoService;
 
         setTitle("📂 Recursos Disponibles");
-        setSize(650, 500);
+        setSize(700, 550);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
@@ -32,7 +39,7 @@ public class VerRecursosFrame extends JFrame {
         listaRecursos = new JList<>(modeloLista);
         listaRecursos.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
-        areaMensajes = new JTextArea(4, 50);
+        areaMensajes = new JTextArea(5, 50);
         areaMensajes.setEditable(false);
         areaMensajes.setFont(new Font("Monospaced", Font.PLAIN, 12));
         areaMensajes.setBackground(new Color(245, 245, 245));
@@ -42,10 +49,9 @@ public class VerRecursosFrame extends JFrame {
         initUI();
         cargarRecursosDisponibles();
 
-        // Mostrar info del recurso seleccionado
         listaRecursos.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                Multimedia seleccionado = listaRecursos.getSelectedValue();
+                Object seleccionado = listaRecursos.getSelectedValue();
                 if (seleccionado != null) {
                     areaMensajes.setText(detalleRecurso(seleccionado));
                 } else {
@@ -78,32 +84,53 @@ public class VerRecursosFrame extends JFrame {
     private void cargarRecursosDisponibles() {
         modeloLista.clear();
 
-        if (multimediaService == null) {
-            areaMensajes.setText("Error: Servicio de multimedia no disponible.");
-            JOptionPane.showMessageDialog(this, "Servicio de multimedia no está disponible.", "Error", JOptionPane.ERROR_MESSAGE);
+        if (multimediaService == null || recursoTecnologicoService == null) {
+            areaMensajes.setText("Error: Servicios no disponibles.");
+            JOptionPane.showMessageDialog(this, "Servicios de recursos no están disponibles.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        List<Multimedia> disponibles = multimediaService.listarRecursos();
+        List<Multimedia> multimediaList = multimediaService.listarRecursos();
+        List<RecursoTecnologico> recursosTecList = recursoTecnologicoService.listarTodos();
 
-        if (disponibles == null || disponibles.isEmpty()) {
+        if ((multimediaList == null || multimediaList.isEmpty()) && (recursosTecList == null || recursosTecList.isEmpty())) {
             areaMensajes.setText("No hay recursos disponibles en este momento.");
             JOptionPane.showMessageDialog(this, "No hay recursos disponibles actualmente.");
-        } else {
-            for (Multimedia m : disponibles) {
+            return;
+        }
+
+        if (multimediaList != null) {
+            for (Multimedia m : multimediaList) {
                 modeloLista.addElement(m);
             }
-            areaMensajes.setText("Se encontraron " + modeloLista.size() + " recurso(s) disponible(s).");
         }
+
+        if (recursosTecList != null) {
+            for (RecursoTecnologico r : recursosTecList) {
+                modeloLista.addElement(r);
+            }
+        }
+
+        areaMensajes.setText("Se encontraron " + modeloLista.size() + " recurso(s) disponible(s).");
     }
 
-    private String detalleRecurso(Multimedia m) {
-        if (m == null) return "";
+    private String detalleRecurso(Object recurso) {
+        if (recurso == null) return "";
 
-        return "Título: " + m.getTitulo() + "\n"
-                + "Autor: " + (m.getAutor() != null ? m.getAutor() : "Desconocido") + "\n"
-                + "Tipo: " + m.getClass().getSimpleName() + "\n"
-                + "Disponible: " + (m.isDisponible() ? "Sí" : "No") + "\n"
-                + "Descripción: " + (m.getDescripcion() != null ? m.getDescripcion() : "No disponible");
+        if (recurso instanceof Multimedia m) {
+            return "📖 Recurso Multimedia\n" +
+                    "Título: " + m.getTitulo() + "\n" +
+                    "Autor: " + (m.getAutor() != null ? m.getAutor() : "Desconocido") + "\n" +
+                    "Tipo: " + m.getClass().getSimpleName() + "\n" +
+                    "Disponible: " + (m.isDisponible() ? "Sí" : "No") + "\n" +
+                    "Descripción: " + (m.getDescripcion() != null ? m.getDescripcion() : "No disponible");
+        } else if (recurso instanceof RecursoTecnologico r) {
+            return "💻 Recurso Tecnológico\n" +
+                    "ID: " + r.getId() + "\n" +
+                    "Tipo: " + r.getTipo() + "\n" +
+                    "Estado: " + r.getEstado();
+        } else {
+            return "Tipo de recurso desconocido.";
+        }
     }
 }

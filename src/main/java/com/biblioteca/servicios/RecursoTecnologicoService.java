@@ -24,6 +24,34 @@ public class RecursoTecnologicoService {
         }
     }
 
+    public boolean reservarPorId(String id) {
+        try {
+            RecursoTecnologico recurso = dao.buscarPorId(id);
+            if (recurso == null || "Reservado".equalsIgnoreCase(recurso.getEstado())) {
+                return false; // No existe o ya reservado
+            }
+            recurso.setEstado("Reservado");
+            return dao.actualizar(recurso);
+        } catch (SQLException e) {
+            System.err.println("Error al reservar recurso tecnológico: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean devolverPorId(String id) {
+        try {
+            RecursoTecnologico recurso = dao.buscarPorId(id);
+            if (recurso == null || "Disponible".equalsIgnoreCase(recurso.getEstado())) {
+                return false; // No existe o ya disponible
+            }
+            recurso.setEstado("Disponible");
+            return dao.actualizar(recurso);
+        } catch (SQLException e) {
+            System.err.println("Error al devolver recurso tecnológico: " + e.getMessage());
+            return false;
+        }
+    }
+
     public boolean actualizarRecursoTecnologico(RecursoTecnologico recurso) {
         try {
             return dao.actualizar(recurso);
@@ -33,23 +61,11 @@ public class RecursoTecnologicoService {
         }
     }
 
-    public boolean marcarComoDisponible(String id) {
-        try {
-            RecursoTecnologico recurso = dao.buscarPorId(id);
-            if (recurso != null && !"Disponible".equalsIgnoreCase(recurso.getEstado())) {
-                return dao.actualizarEstado(id, "Disponible");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al marcar recurso tecnológico como disponible: " + e.getMessage());
-        }
-        return false;
-    }
-
-    public List<RecursoTecnologico> getTodos() {
+    public List<RecursoTecnologico> listarTodos() {
         try {
             return dao.listarTodos();
         } catch (SQLException e) {
-            System.err.println("Error al listar todos los recursos tecnológicos: " + e.getMessage());
+            System.err.println("Error al obtener recursos tecnológicos: " + e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -58,35 +74,9 @@ public class RecursoTecnologicoService {
         try {
             return dao.listarDisponibles();
         } catch (SQLException e) {
-            System.err.println("Error al listar recursos tecnológicos disponibles: " + e.getMessage());
+            System.err.println("Error al listar recursos disponibles: " + e.getMessage());
             return Collections.emptyList();
         }
-    }
-
-    public boolean reservarRecurso(String id) {
-        try {
-            RecursoTecnologico recurso = dao.buscarPorId(id);
-            if (recurso != null && "Disponible".equalsIgnoreCase(recurso.getEstado())) {
-                return dao.actualizarEstado(id, "Reservado");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al reservar recurso tecnológico: " + e.getMessage());
-        }
-        return false;
-    }
-
-    public boolean reservarPorTipo(String tipo) {
-        try {
-            List<RecursoTecnologico> disponibles = dao.listarDisponibles();
-            for (RecursoTecnologico recurso : disponibles) {
-                if (tipo.equalsIgnoreCase(recurso.getTipo())) {
-                    return dao.actualizarEstado(recurso.getId(), "Reservado");
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al reservar recurso tecnológico por tipo: " + e.getMessage());
-        }
-        return false;
     }
 
     public boolean agregarRecurso(RecursoTecnologico recurso) {
@@ -105,18 +95,5 @@ public class RecursoTecnologicoService {
             System.err.println("Error al eliminar recurso tecnológico: " + e.getMessage());
             return false;
         }
-    }
-
-    /** Método para liberar recurso (marcar como disponible) */
-    public boolean liberarRecurso(String id) {
-        try {
-            RecursoTecnologico recurso = dao.buscarPorId(id);
-            if (recurso != null && "Reservado".equalsIgnoreCase(recurso.getEstado())) {
-                return dao.actualizarEstado(id, "Disponible");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al liberar recurso tecnológico: " + e.getMessage());
-        }
-        return false;
     }
 }

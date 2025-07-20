@@ -91,12 +91,12 @@ public class MenuFrame extends JFrame {
 
             // --- NUEVO BOTÓN PARA RECURSOS TECNOLÓGICOS ---
             panelBotones.add(crearBoton("Gestión de Recursos Tecnológicos", "icons/recursos_tecnologicos.png",
-                    () -> new GestionRecursosTecnologicosFrame(connection).setVisible(true)));
+                    () -> new GestionRecursosTecnologicosFrame(recursoTecnologicoService).setVisible(true)));
         }
 
         if (rol.equals("ESTUDIANTE")) {
             panelBotones.add(crearBoton("Ver Recursos Disponibles", "icons/verrecursos.png",
-                    () -> new VerRecursosFrame(usuario, prestamoService).setVisible(true)));
+                    () -> new VerRecursosFrame(usuario, prestamoService, multimediaService, recursoTecnologicoService).setVisible(true)));
 
             panelBotones.add(crearBoton("Ver Mis Préstamos", "icons/misprestamos.png",
                     () -> new VerMisPrestamosFrame(usuario, prestamoService).setVisible(true)));

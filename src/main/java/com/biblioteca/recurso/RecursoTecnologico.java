@@ -14,6 +14,13 @@ public class RecursoTecnologico {
         this.estado = "Disponible";
     }
 
+    // ✅ Constructor nuevo con boolean disponible
+    public RecursoTecnologico(String tipo, boolean disponible) {
+        this.id = UUID.randomUUID().toString();
+        this.tipo = tipo;
+        this.estado = disponible ? "Disponible" : "Reservado";
+    }
+
     // Constructor para crear recurso con ID y estado específicos (ej. desde BD)
     public RecursoTecnologico(String id, String tipo, String estado) {
         this.id = id;
@@ -29,9 +36,8 @@ public class RecursoTecnologico {
         return tipo;
     }
 
-    // Nuevo método para retornar un nombre representativo (como getNombre)
     public String getNombre() {
-        return tipo; // Puedes cambiarlo si quieres que sea otra cosa
+        return tipo;
     }
 
     public String getEstado() {

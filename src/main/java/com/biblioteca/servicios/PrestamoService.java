@@ -159,18 +159,22 @@ public class PrestamoService {
             // Prestamos Multimedia
             List<Prestamo> prestamosMultimedia = prestamoDAO.obtenerPrestamosPorUsuario(idUsuario);
             for (Prestamo p : prestamosMultimedia) {
-                Multimedia m = multimediaService.buscarPorId(p.getIdRecurso());
-                if (m != null) {
-                    lista.add(new RecursoPrestado(p, m));
+                if (!p.isDevuelto()) {
+                    Multimedia m = multimediaService.buscarPorId(p.getIdRecurso());
+                    if (m != null) {
+                        lista.add(new RecursoPrestado(p, m));
+                    }
                 }
             }
 
             // Prestamos Tecnológicos
             List<Prestamo> prestamosTec = prestamoRecTecDAO.obtenerPrestamosPorUsuario(idUsuario);
             for (Prestamo p : prestamosTec) {
-                RecursoTecnologico rt = recursoTecnologicoService.buscarPorId(p.getIdRecurso());
-                if (rt != null) {
-                    lista.add(new RecursoPrestado(p, rt));
+                if (!p.isDevuelto()) {
+                    RecursoTecnologico rt = recursoTecnologicoService.buscarPorId(p.getIdRecurso());
+                    if (rt != null) {
+                        lista.add(new RecursoPrestado(p, rt));
+                    }
                 }
             }
 
@@ -181,6 +185,7 @@ public class PrestamoService {
 
         return lista;
     }
+
     public List<Prestamo> listarPrestamos() {
         return listarPrestamos("Multimedia");
     }
@@ -277,11 +282,21 @@ public class PrestamoService {
         return activos;
     }
 
-    public Object buscarRecursoPorId(String idRecurso) {
-        Multimedia multimedia = multimediaService.buscarPorId(idRecurso);
-        if (multimedia != null) return multimedia;
+    public Object buscarRecursoPorId(String id) {
+        try {
+            Multimedia multimedia = multimediaService.buscarPorId(id);
+            if (multimedia != null) {
+                return multimedia;
+            }
 
-        return recursoTecnologicoService.buscarPorId(idRecurso);
+            RecursoTecnologico recursoTecnologico = recursoTecnologicoService.buscarPorId(id);
+            if (recursoTecnologico != null) {
+                return recursoTecnologico;
+            }
+        } catch (Exception e) {
+            System.err.println("Error al buscar recurso por ID: " + e.getMessage());
+        }
+        return null;
     }
 
     public List<Multimedia> listarRecursosDisponibles() {
