@@ -110,6 +110,29 @@ public class RecursoTecnologicoDAO {
     public boolean devolverRecurso(String id) throws SQLException {
         return actualizarEstado(id, "Disponible");
     }
+    public boolean reservarRecursoParaUsuario(String idRecurso, String idUsuario) throws SQLException {
+        String sqlInsertReserva = "INSERT INTO reservas_recursos_tecnologicos (id_recurso_tecnologico, id_usuario, fecha_reserva, estado) VALUES (?, ?, NOW(), 'Reservado')";
+        String sqlActualizarEstadoRecurso = "UPDATE recursos_tecnologicos SET estado = 'Reservado' WHERE id = ?";
+
+        try (PreparedStatement psInsert = conexion.prepareStatement(sqlInsertReserva);
+             PreparedStatement psUpdate = conexion.prepareStatement(sqlActualizarEstadoRecurso)) {
+
+            // Insertar la reserva
+            psInsert.setString(1, idRecurso);
+            psInsert.setString(2, idUsuario);
+            int filasInsertadas = psInsert.executeUpdate();
+
+            if (filasInsertadas == 0) {
+                return false; // No se pudo insertar reserva
+            }
+
+            // Actualizar estado del recurso a reservado
+            psUpdate.setString(1, idRecurso);
+            int filasActualizadas = psUpdate.executeUpdate();
+
+            return filasActualizadas > 0;
+        }
+    }
 
     private RecursoTecnologico mapearRecurso(ResultSet rs) throws SQLException {
         return new RecursoTecnologico(

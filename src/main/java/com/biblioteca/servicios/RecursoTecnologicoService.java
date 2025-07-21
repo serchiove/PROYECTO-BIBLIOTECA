@@ -60,6 +60,14 @@ public class RecursoTecnologicoService {
             return false;
         }
     }
+    public boolean reservarPorIdYUsuario(String idRecurso, String idUsuario) {
+        try {
+            return dao.reservarRecursoParaUsuario(idRecurso, idUsuario);
+        } catch (Exception e) {
+            System.err.println("Error al reservar recurso para usuario: " + e.getMessage());
+            return false;
+        }
+    }
 
     public List<RecursoTecnologico> listarTodos() {
         try {

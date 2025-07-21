@@ -158,14 +158,9 @@ public class GestionPrestamosFrame extends JFrame {
     private void cargarRecursosDisponibles() {
         comboRecursosDisponibles.removeAllItems();
         try {
-            // Cargar recursos multimedia disponibles
+            // Solo cargar recursos multimedia disponibles (sin tecnológicos)
             List<Multimedia> multimediaDisponibles = prestamoService.listarRecursosDisponibles();
             for (Multimedia r : multimediaDisponibles) {
-                comboRecursosDisponibles.addItem(r);
-            }
-            // Cargar recursos tecnológicos disponibles
-            List<RecursoTecnologico> tecnologicosDisponibles = recursoTecnologicoService.listarDisponibles();
-            for (RecursoTecnologico r : tecnologicosDisponibles) {
                 comboRecursosDisponibles.addItem(r);
             }
         } catch (Exception e) {
@@ -173,6 +168,7 @@ public class GestionPrestamosFrame extends JFrame {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     private void cargarRecursosPrestados(Usuario usuario) {
         comboRecursosPrestados.removeAllItems(); // Limpia combo antes

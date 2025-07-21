@@ -91,8 +91,13 @@ public class MenuFrame extends JFrame {
 
             // --- NUEVO BOTÓN PARA RECURSOS TECNOLÓGICOS ---
             panelBotones.add(crearBoton("Gestión de Recursos Tecnológicos", "icons/recursos_tecnologicos.png",
-                    () -> new GestionRecursosTecnologicosFrame(recursoTecnologicoService).setVisible(true)));
+                    () -> new GestionRecursosTecnologicosFrame(recursoTecnologicoService, usuarioService).setVisible(true)));
+
+            // Botón agregado para ADMIN/BIBLIOTECARIO:
+            panelBotones.add(crearBoton("Mis Recursos Interactivos", "icons/interactivos.png",
+                    () -> new MisRecursosInteractivosFrame(usuario, prestamoService).setVisible(true)));
         }
+
 
         if (rol.equals("ESTUDIANTE")) {
             panelBotones.add(crearBoton("Ver Recursos Disponibles", "icons/verrecursos.png",
@@ -104,10 +109,37 @@ public class MenuFrame extends JFrame {
             panelBotones.add(crearBoton("Mis Recursos Interactivos", "icons/interactivos.png",
                     () -> new MisRecursosInteractivosFrame(usuario, prestamoService).setVisible(true)));
 
-            // NUEVO: botón para que el estudiante gestione sus préstamos
             panelBotones.add(crearBoton("Gestionar mis Préstamos", "icons/prestamo.png",
                     () -> new GestionPrestamosFrame(connection, usuario).setVisible(true)));
+
+            // 🔽 Nuevo botón de solicitud para estudiantes
+            panelBotones.add(crearBoton("Solicitud de recurso tecnológico", "icons/solicitud.png",
+                    () -> JOptionPane.showMessageDialog(this,
+                            "La solicitud al admin fue hecha.",
+                            "Solicitud enviada",
+                            JOptionPane.INFORMATION_MESSAGE)));
         }
+
+
+        if (rol.equals("PROFESOR")) {
+            panelBotones.add(crearBoton("Ver Recursos Disponibles", "icons/verrecursos.png",
+                    () -> new VerRecursosFrame(usuario, prestamoService, multimediaService, recursoTecnologicoService).setVisible(true)));
+
+            panelBotones.add(crearBoton("Ver Mis Préstamos", "icons/misprestamos.png",
+                    () -> new VerMisPrestamosFrame(usuario, prestamoService).setVisible(true)));
+
+            panelBotones.add(crearBoton("Gestionar Préstamos", "icons/prestamo.png",
+                    () -> new GestionPrestamosFrame(connection, usuario).setVisible(true)));
+
+            panelBotones.add(crearBoton("Gestionar Recursos Multimedia", "icons/recursos.png",
+                    () -> new GestionMultimediaFrame(usuario, multimediaService).setVisible(true)));
+
+            panelBotones.add(crearBoton("Gestionar Recursos Tecnológicos", "icons/recursos_tecnologicos.png",
+                    () -> new GestionRecursosTecnologicosFrame(recursoTecnologicoService, usuarioService).setVisible(true)));
+            panelBotones.add(crearBoton("Mis Recursos Interactivos", "icons/interactivos.png",
+                    () -> new MisRecursosInteractivosFrame(usuario, prestamoService).setVisible(true)));
+        }
+
 
         panelBotones.add(Box.createVerticalStrut(10));
 
